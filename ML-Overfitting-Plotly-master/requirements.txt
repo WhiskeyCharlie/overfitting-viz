@@ -1,0 +1,14 @@
+# Core
+plotly
+dash
+dash-auth
+dash-core-components
+dash-html-components
+dash-renderer
+gunicorn
+
+# Additional
+numpy
+scikit-learn
+scipy
+sympy
