@@ -177,7 +177,7 @@ def make_dataset(name, random_state, sample_size, noise_factor):
 
     elif name == 'dataset #2':
         X = load_boston().data[:, -1].reshape(-1, 1)
-        y = (load_boston().target)
+        y = load_boston().target
         if noise_factor:
             y[:50] += (5 + noise_factor * 13)
             y[250:350] -= (20 + noise_factor * 3)
@@ -191,24 +191,24 @@ def make_dataset(name, random_state, sample_size, noise_factor):
 
 
 def format_yhat(model):
-    coefs = model.coef_
+    coefficients = model.coef_
     intercept = model.intercept_
-    model_values = np.insert(coefs, 0, intercept)
-    coef_string = "yhat = "
+    model_values = np.insert(coefficients, 0, intercept)
+    coefficient_string = "yhat = "
 
-    for order, coef in enumerate(model_values):
-        if coef >= 0:
+    for order, coefficient in enumerate(model_values):
+        if coefficient >= 0:
             sign = ' + '
         else:
             sign = ' - '
         if order == 0:
-            coef_string += f'{coef}'
+            coefficient_string += f'{coefficient}'
         elif order == 1:
-            coef_string += sign + f'{abs(coef):.3f}*x'
+            coefficient_string += sign + f'{abs(coefficient):.3f}*x'
         else:
-            coef_string += sign + f'{abs(coef):.3f}*x^{order}'
+            coefficient_string += sign + f'{abs(coefficient):.3f}*x^{order}'
 
-    return coef_string
+    return coefficient_string
 
 
 @app.callback(Output('dropdown-custom-selection', 'disabled'),
@@ -338,4 +338,4 @@ def update_graph(dataset, sample_size, degree, noise_factor, model_name, custom_
 
 # Running the server
 if __name__ == '__main__':
-    app.run_server(debug=False, port=2522)
+    app.run_server(port=2522)

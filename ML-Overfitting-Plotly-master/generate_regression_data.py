@@ -21,7 +21,7 @@ def compute_reg_functions(number_of_functions=12):
     return final_funcs
 
 
-reg_functions = compute_reg_functions(number_of_functions=12)
+reg_functions = compute_reg_functions()
 
 
 def symbolize(s):
@@ -35,11 +35,11 @@ def symbolize(s):
     return s3
 
 
-def eval_multinomial(s, vals=None, symbolic_eval=False):
+def eval_multinomial(s, values=None, symbolic_eval=False):
     """
-    Evaluates polynomial at vals.
-    vals can be simple list, dictionary, or tuple of values.
-    vals can also contain symbols instead of real values provided those symbols have been declared before using SymPy
+    Evaluates polynomial at values.
+    values can be simple list, dictionary, or tuple of values.
+    values can also contain symbols instead of real values provided those symbols have been declared before using SymPy
     """
     sym_s = symbolize(s)
     sym_set = sym_s.atoms(Symbol)
@@ -47,21 +47,23 @@ def eval_multinomial(s, vals=None, symbolic_eval=False):
     for s in sym_set:
         sym_lst.append(str(s))
     sym_lst.sort()
-    if symbolic_eval == False and len(sym_set) != len(vals):
+    if symbolic_eval is False and len(sym_set) != len(values):
         print("Length of the input values did not match number of variables and symbolic evaluation is not selected")
         return None
     else:
-        if type(vals) == list:
-            sub = list(zip(sym_lst, vals))
-        elif type(vals) == dict:
-            l = list(vals.keys())
-            l.sort()
+        if type(values) == list:
+            sub = list(zip(sym_lst, values))
+        elif type(values) == dict:
+            lst = list(values.keys())
+            lst.sort()
             lst = []
-            for i in l:
-                lst.append(vals[i])
+            for i in lst:
+                lst.append(values[i])
             sub = list(zip(sym_lst, lst))
-        elif type(vals) == tuple:
-            sub = list(zip(sym_lst, list(vals)))
+        elif type(values) == tuple:
+            sub = list(zip(sym_lst, list(values)))
+        else:
+            raise TypeError(f'"values" type should have been one of list, dict, tuple, but was {type(values)}')
         result = sym_s.subs(sub)
 
     return result
@@ -78,12 +80,12 @@ def gen_regression_symbolic(m=None, n_samples=100, n_features=2, noise=0.0, nois
                 default simple polynomial can be invoked to generate regression samples with n_features.
     noise: Magnitude of Gaussian noise to be introduced (added to the output).
     noise_dist: Type of the probability distribution of the noise signal.
-    Currently supports: Normal, Uniform, t, Beta, Gamma, Poission, Laplace
+    Currently supports: Normal, Uniform, t, Beta, Gamma, Poisson, Laplace
 
     Returns a numpy ndarray with dimension (n_samples,n_features+1). Last column is the response vector.
     """
 
-    if m == None:
+    if m is None:
         m = ''
         for i in range(1, n_features + 1):
             c = 'x' + str(i)
@@ -94,11 +96,8 @@ def gen_regression_symbolic(m=None, n_samples=100, n_features=2, noise=0.0, nois
     sym_m = sympify(m)
 
     n_features = len(sym_m.atoms(Symbol))
-    evals = []
-    lst_features = []
-
-    # for i in range(n_features):
-    lst_features.append(np.random.uniform(-2, 2, size=n_samples))
+    evaluations = []
+    lst_features = [np.random.uniform(-2, 2, size=n_samples)]
 
     lst_features = np.array(lst_features)
     lst_features = lst_features.T
@@ -106,15 +105,14 @@ def gen_regression_symbolic(m=None, n_samples=100, n_features=2, noise=0.0, nois
     lst_features = lst_features.reshape(n_samples, n_features)
 
     if sym_m.is_Integer or sym_m.is_Float:
-        evals = [sym_m] * n_samples
+        evaluations = [sym_m] * n_samples
 
     else:
         for i in range(n_samples):
-            evals.append(eval_multinomial(m, vals=list(lst_features[i])))
+            evaluations.append(eval_multinomial(m, values=list(lst_features[i])))
 
-    evals = np.array(evals)
-    evals = evals.astype(np.float64)
-    # evals = evals.reshape(n_samples, 1)
+    evaluations = np.array(evaluations)
+    evaluations = evaluations.astype(np.float64)
 
     if noise_dist == 'normal':
         noise_sample = np.random.normal(loc=0, scale=noise, size=n_samples)
@@ -126,11 +124,9 @@ def gen_regression_symbolic(m=None, n_samples=100, n_features=2, noise=0.0, nois
         noise_sample = noise * np.random.gamma(shape=1.0, scale=1.0, size=n_samples)
     elif noise_dist == 'laplace':
         noise_sample = noise * np.random.laplace(loc=0.0, scale=1.0, size=n_samples)
+    else:
+        raise ValueError('Unsupported Noise Distribution')
 
-    # noise_sample = noise_sample.reshape(n_samples, 1)
+    evaluations = evaluations + noise_sample
 
-    evals = evals + noise_sample
-
-    # x = np.hstack((lst_features, evals))
-
-    return lst_features, evals
+    return lst_features, evaluations
