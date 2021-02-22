@@ -1,26 +1,37 @@
 import json
+
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-import plotly.graph_objs as go
 import numpy as np
-from sklearn.datasets import make_regression, load_boston
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import PolynomialFeatures
+import plotly.graph_objs as go
 from dash.dependencies import Input, Output, State
-from generate_regression_data import reg_functions, gen_regression_symbolic
+from sklearn.datasets import load_boston
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import PolynomialFeatures
 
 import dash_reusable_components as drc
+from generate_regression_data import reg_functions, gen_regression_symbolic
 
 RANDOM_STATE = 718
 DS_NAME_TO_DEGREE = {'degree_0': 0, 'degree_1': 1, 'degree_2': 2, 'degree_3': 3,
                      'degree_4': 4, 'degree_5': 5, 'degree_6': 6, 'degree_7': 7, 'degree_8': 8,
                      'degree_9': 9, 'degree_10': 10}
 
+EXTERNAL_CSS = [
+    "https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css",
+    "https://fonts.googleapis.com/css?family=Open+Sans|Roboto",  # Fonts
+    "https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css",
+    # Base Stylesheet
+    "https://cdn.rawgit.com/xhlulu/9a6e89f418ee40d02b637a429a876aa9/raw/base-styles.css",
+    # Custom Stylesheet
+    "https://cdn.rawgit.com/plotly/dash-regression/98b5a541/custom-styles.css"
+]
 
-app = dash.Dash(__name__)
+app = dash.Dash(__name__,
+                external_stylesheets=EXTERNAL_CSS)
 server = app.server
 
 app.layout = html.Div([
@@ -93,44 +104,44 @@ app.layout = html.Div([
         html.Div(className='row', children=[
 
             html.Div(className='four columns',
-                 style={
-                     'padding-bottom': '10px',
-                     'padding-left': '10px'
-                 },
-                children=drc.InputArea(
-                name="Select Dataset Noise Factor",
-                min=0,
-                value=0,
-                id='slider-dataset-noise',
-                type='number'
-            )),
+                     style={
+                         'padding-bottom': '10px',
+                         'padding-left': '10px'
+                     },
+                     children=drc.InputArea(
+                         name="Select Dataset Noise Factor",
+                         min=0,
+                         value=0,
+                         id='slider-dataset-noise',
+                         type='number'
+                     )),
 
             html.Div(className='four columns',
-                 style={
-                     'padding-bottom': '10px',
-                     'padding-left': '10px'
-                 },
-                children=drc.InputArea(
-                name="Select Dataset Sample Size",
-                min=10,
-                value=300,
-                id="slider-sample-size",
-                type='number'
-            )),
+                     style={
+                         'padding-bottom': '10px',
+                         'padding-left': '10px'
+                     },
+                     children=drc.InputArea(
+                         name="Select Dataset Sample Size",
+                         min=10,
+                         value=300,
+                         id="slider-sample-size",
+                         type='number'
+                     )),
 
             html.Div(className='four columns',
-                 style={
-                     'padding-bottom': '10px',
-                     'padding-left': '10px'
-                 },
-                children=drc.InputArea(
-                name="Select Model Polynomial Degree (integer from 1-10)",
-                min=0,
-                max=10,
-                value=1,
-                id="slider-polynomial-degree",
-                type='number'
-            )),
+                     style={
+                         'padding-bottom': '10px',
+                         'padding-left': '10px'
+                     },
+                     children=drc.InputArea(
+                         name="Select Model Polynomial Degree (integer from 1-10)",
+                         min=0,
+                         max=10,
+                         value=1,
+                         id="slider-polynomial-degree",
+                         type='number'
+                     )),
         ]),
 
         dcc.Graph(
@@ -205,6 +216,7 @@ def format_yhat(model):
 def disable_custom_selection(dataset):
     return dataset != 'custom'
 
+
 @app.callback(Output('custom-data-storage', 'children'),
               [Input('graph-regression-display', 'clickData')],
               [State('dropdown-custom-selection', 'value'),
@@ -273,7 +285,6 @@ def update_graph(dataset, sample_size, degree, noise_factor, model_name, custom_
 
         X_range = np.linspace(X.min() - 0.5, X.max() + 0.5, sample_size).reshape(-1, 1)
 
-
     # Create Polynomial Features
     poly = PolynomialFeatures(degree=degree, include_bias=False)
     X_train_poly = poly.fit_transform(X_train)
@@ -324,19 +335,6 @@ def update_graph(dataset, sample_size, degree, noise_factor, model_name, custom_
 
     return go.Figure(data=data, layout=layout)
 
-
-external_css = [
-    "https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css",
-    "https://fonts.googleapis.com/css?family=Open+Sans|Roboto",  # Fonts
-    "https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css",
-    # Base Stylesheet
-    "https://cdn.rawgit.com/xhlulu/9a6e89f418ee40d02b637a429a876aa9/raw/base-styles.css",
-    # Custom Stylesheet
-    "https://cdn.rawgit.com/plotly/dash-regression/98b5a541/custom-styles.css"
-]
-
-for css in external_css:
-    app.css.append_css({"external_url": css})
 
 # Running the server
 if __name__ == '__main__':

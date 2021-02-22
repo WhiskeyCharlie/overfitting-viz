@@ -1,19 +1,20 @@
 import numpy as np
 from sympy import Symbol, sympify
 
+
 def compute_reg_functions(number_of_functions=12):
     final_funcs = []
     for i in range(1, number_of_functions):
         func_string = ''
-        coefs = np.random.uniform(-1,1, size=i)
-        for order, coef in enumerate(coefs):
-            sign = ' + ' if coef >= 0 else ' - '
+        coefficients = np.random.uniform(-1, 1, size=i)
+        for order, coefficient in enumerate(coefficients):
+            sign = ' + ' if coefficient >= 0 else ' - '
             if order == 0:
-                func_string += f'{coef}'
+                func_string += f'{coefficient}'
             elif order == 1:
-                func_string += sign + f'{abs(coef):.3f}*x1'
+                func_string += sign + f'{abs(coefficient):.3f}*x1'
             else:
-                func_string += sign + f'{abs(coef):.3f}*x1**{order}'
+                func_string += sign + f'{abs(coefficient):.3f}*x1**{order}'
 
         final_funcs.append(func_string)
 
@@ -21,6 +22,7 @@ def compute_reg_functions(number_of_functions=12):
 
 
 reg_functions = compute_reg_functions(number_of_functions=12)
+
 
 def symbolize(s):
     """

@@ -20,11 +20,13 @@ def NamedSlider(name, **kwargs):
         ]
     )
 
+
 def NamedDropdown(name, **kwargs):
     return html.Div([
         html.P(f'{name}:', style={'margin-left': '3px'}),
         dcc.Dropdown(**kwargs)
     ])
+
 
 def InputArea(name, **kwargs):
     return html.Div([
