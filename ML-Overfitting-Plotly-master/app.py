@@ -180,7 +180,10 @@ app.layout = html.Div(children=[
                 children=dcc.Graph(
                     id='graph-regression-display',
                     className='row',
-                    style={'height': 'calc(100vh - 160px)'},
+                    style={
+                        'height': 'calc(100vh - 160px)',
+                        'width': 'calc(70vw - 160px)'
+                    },
                     config={'modeBarButtonsToRemove': [
                         'pan2d',
                         'lasso2d',
@@ -190,7 +193,8 @@ app.layout = html.Div(children=[
                         'hoverCompareCartesian',
                         'toggleSpikelines'
                     ]}
-                )),
+                ),
+                style={'display': 'inline-block'}),
 
             html.Div(
                 className='three columns',
@@ -264,7 +268,7 @@ app.layout = html.Div(children=[
                             type='number'
                         ),
                         drc.InputArea(
-                            name="Select Model Polynomial Degree (integer from 1-10)",
+                            name='Select Model Polynomial Degree (integer from 1-10)',
                             min=0,
                             max=10,
                             value=1,
