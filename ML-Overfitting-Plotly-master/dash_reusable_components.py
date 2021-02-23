@@ -33,3 +33,8 @@ def InputArea(name, **kwargs):
         html.P(f'{name}:', style={'margin-left': '3px'}),
         dcc.Input(**kwargs)
     ])
+
+
+# Custom Display Components
+def Card(children, **kwargs):
+    return html.Section(className="card", children=children, **_omit(["style"], kwargs))

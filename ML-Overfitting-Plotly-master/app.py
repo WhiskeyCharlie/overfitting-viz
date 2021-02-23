@@ -161,6 +161,123 @@ app.layout = html.Div([
     ])
 ])
 
+app.layout = html.Div(children=[
+    # .container class is fixed, .container.scalable is scalable
+    html.Div(className="banner", children=[
+        html.Div(className='container scalable', children=[
+            html.H2(html.A(
+                'Overfitting Explorer',
+                style={'text-decoration': 'none', 'color': 'inherit'}
+            ))
+        ]),
+    ]),
+
+    html.Div(id='body', className='container scalable', children=[
+        html.Div(id='custom-data-storage', style={'display': 'none'}),
+        html.Div(className='row', children=[
+            html.Div(
+                id='div-graphs',
+                children=dcc.Graph(
+                    id='graph-regression-display',
+                    className='row',
+                    style={'height': 'calc(100vh - 160px)'},
+                    config={'modeBarButtonsToRemove': [
+                        'pan2d',
+                        'lasso2d',
+                        'select2d',
+                        'autoScale2d',
+                        'hoverClosestCartesian',
+                        'hoverCompareCartesian',
+                        'toggleSpikelines'
+                    ]}
+                )),
+
+            html.Div(
+                className='three columns',
+                style={
+                    'min-width': '24.5%',
+                    'max-height': 'calc(100vh - 85px)',
+                    'overflow-y': 'auto',
+                    'overflow-x': 'hidden',
+                },
+                children=[
+                    drc.Card([
+                        drc.NamedDropdown(
+                            name='Select Model',
+                            id='dropdown-select-model',
+                            options=[
+                                {'label': 'Linear Regression', 'value': 'linear'},
+                            ],
+                            value='linear',
+                            searchable=False,
+                            clearable=False
+                        ),
+                        drc.NamedDropdown(
+                            name='Select Dataset',
+                            id='dropdown-dataset',
+                            options=[
+                                {'label': 'Dataset #1', 'value': 'dataset #1'},
+                                {'label': 'Dataset #2', 'value': 'dataset #2'},
+                                {'label': 'Custom Data', 'value': 'custom'},
+                                {'label': 'Dataset Degree 0', 'value': 'degree_0'},
+                                {'label': 'Dataset Degree 1', 'value': 'degree_1'},
+                                {'label': 'Dataset Degree 2', 'value': 'degree_2'},
+                                {'label': 'Dataset Degree 3', 'value': 'degree_3'},
+                                {'label': 'Dataset Degree 4', 'value': 'degree_4'},
+                                {'label': 'Dataset Degree 5', 'value': 'degree_5'},
+                                {'label': 'Dataset Degree 6', 'value': 'degree_6'},
+                                {'label': 'Dataset Degree 7', 'value': 'degree_7'},
+                                {'label': 'Dataset Degree 8', 'value': 'degree_8'},
+                                {'label': 'Dataset Degree 9', 'value': 'degree_9'},
+                                {'label': 'Dataset Degree 10', 'value': 'degree_10'},
+
+                            ],
+                            value='degree_1',
+                            clearable=False,
+                            searchable=False
+                        ),
+                        drc.NamedDropdown(
+                            name='Click Mode (Select Custom Data to enable)',
+                            id='dropdown-custom-selection',
+                            options=[
+                                {'label': 'Add Training Data Points', 'value': 'training'},
+                                {'label': 'Add Test Data Points', 'value': 'test'},
+                                {'label': 'Remove Data point', 'value': 'remove'},
+                                {'label': 'Do Nothing', 'value': 'nothing'},
+                            ],
+                            value='training',
+                            clearable=False,
+                            searchable=False
+                        ),
+                        drc.InputArea(
+                            name="Select Dataset Noise Factor",
+                            min=0,
+                            value=0,
+                            id='slider-dataset-noise',
+                            type='number'
+                        ),
+                        drc.InputArea(
+                            name="Select Dataset Sample Size",
+                            min=10,
+                            value=300,
+                            id="slider-sample-size",
+                            type='number'
+                        ),
+                        drc.InputArea(
+                            name="Select Model Polynomial Degree (integer from 1-10)",
+                            min=0,
+                            max=10,
+                            value=1,
+                            id="slider-polynomial-degree",
+                            type='number'
+                        )
+                    ]),
+                ]
+            ),
+        ]),
+    ])
+])
+
 
 def make_dataset(name, random_state, sample_size, noise_factor):
     np.random.seed(random_state)
@@ -338,4 +455,4 @@ def update_graph(dataset, sample_size, degree, noise_factor, model_name, custom_
 
 # Running the server
 if __name__ == '__main__':
-    app.run_server(port=2522)
+    app.run_server(port=2522, debug=True)
