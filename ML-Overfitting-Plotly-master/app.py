@@ -47,10 +47,90 @@ app.layout = html.Div(children=[
 
     html.Div(id='body', className='container scalable', children=[
         html.Div(id='custom-data-storage', style={'display': 'none'}),
-        html.Div(className='row', children=[
-            html.Div(
-                id='div-graphs',
-                children=dcc.Graph(
+        html.Div(
+            className='two columns',
+            style={
+                'min-width': '15%',
+                'max-height': 'calc(100vh - 85px)',
+                'overflow-y': 'auto',
+                'overflow-x': 'hidden',
+            },
+            children=[
+                drc.card([
+                    html.Br(), html.Br(), html.Br(), html.Br(),
+                    drc.named_dropdown(
+                        name='Select Dataset',
+                        id='dropdown-dataset',
+                        options=[
+                            {'label': 'Dataset #1', 'value': 'dataset #1'},
+                            {'label': 'Dataset #2', 'value': 'dataset #2'},
+                            {'label': 'Custom Data', 'value': 'custom'},
+                            {'label': 'Dataset Degree 0', 'value': 'degree_0'},
+                            {'label': 'Dataset Degree 1', 'value': 'degree_1'},
+                            {'label': 'Dataset Degree 2', 'value': 'degree_2'},
+                            {'label': 'Dataset Degree 3', 'value': 'degree_3'},
+                            {'label': 'Dataset Degree 4', 'value': 'degree_4'},
+                            {'label': 'Dataset Degree 5', 'value': 'degree_5'},
+                            {'label': 'Dataset Degree 6', 'value': 'degree_6'},
+                            {'label': 'Dataset Degree 7', 'value': 'degree_7'},
+                            {'label': 'Dataset Degree 8', 'value': 'degree_8'},
+                            {'label': 'Dataset Degree 9', 'value': 'degree_9'},
+                            {'label': 'Dataset Degree 10', 'value': 'degree_10'},
+
+                        ],
+                        value='degree_1',
+                        clearable=False,
+                        searchable=False,
+                        style={
+                            'color': 'rgb(0, 0, 0)'
+                        }
+                    ),
+                    drc.named_dropdown(
+                        name='Click Mode (Select Custom Data to enable)',
+                        id='dropdown-custom-selection',
+                        options=[
+                            {'label': 'Add Training Data Points', 'value': 'training'},
+                            {'label': 'Add Test Data Points', 'value': 'test'},
+                            {'label': 'Remove Data point', 'value': 'remove'},
+                            {'label': 'Do Nothing', 'value': 'nothing'},
+                        ],
+                        value='training',
+                        clearable=False,
+                        searchable=False,
+                        style={
+                            'color': 'rgb(0, 0, 0)'
+                        }
+                    ),
+                    drc.input_area(
+                        name="Select Dataset Noise Factor",
+                        min=0,
+                        value=0,
+                        id='slider-dataset-noise',
+                        type='number'
+                    ),
+                    drc.input_area(
+                        name="Select Dataset Sample Size",
+                        min=10,
+                        value=300,
+                        id="slider-sample-size",
+                        type='number'
+                    ),
+                    drc.input_area(
+                        name='Select Model Polynomial Degree',
+                        min=0,
+                        max=10,
+                        value=1,
+                        id="slider-polynomial-degree",
+                        type='number'
+                    )
+                ]),
+            ]
+        ),
+        html.Div(
+            id='div-graphs',
+            className='five columns',
+            children=[
+                dcc.Graph(
                     id='graph-regression-display',
                     figure=dict(
                         layout=dict(
@@ -60,7 +140,6 @@ app.layout = html.Div(children=[
                     className='row',
                     style={
                         'height': 'calc(100vh - 160px)',
-                        'width': 'calc(70vw - 160px)'
                     },
                     config={'modeBarButtonsToRemove': [
                         'pan2d',
@@ -71,90 +150,35 @@ app.layout = html.Div(children=[
                         'hoverCompareCartesian',
                         'toggleSpikelines'
                     ]}
-                ),
-                style={'display': 'inline-block'}),
-
-            html.Div(
-                className='three columns',
-                style={
-                    'min-width': '24.5%',
-                    'max-height': 'calc(100vh - 85px)',
-                    'overflow-y': 'auto',
-                    'overflow-x': 'hidden',
-                },
-                children=[
-                    drc.card([
-                        html.Br(), html.Br(), html.Br(), html.Br(),
-                        drc.named_dropdown(
-                            name='Select Dataset',
-                            id='dropdown-dataset',
-                            options=[
-                                {'label': 'Dataset #1', 'value': 'dataset #1'},
-                                {'label': 'Dataset #2', 'value': 'dataset #2'},
-                                {'label': 'Custom Data', 'value': 'custom'},
-                                {'label': 'Dataset Degree 0', 'value': 'degree_0'},
-                                {'label': 'Dataset Degree 1', 'value': 'degree_1'},
-                                {'label': 'Dataset Degree 2', 'value': 'degree_2'},
-                                {'label': 'Dataset Degree 3', 'value': 'degree_3'},
-                                {'label': 'Dataset Degree 4', 'value': 'degree_4'},
-                                {'label': 'Dataset Degree 5', 'value': 'degree_5'},
-                                {'label': 'Dataset Degree 6', 'value': 'degree_6'},
-                                {'label': 'Dataset Degree 7', 'value': 'degree_7'},
-                                {'label': 'Dataset Degree 8', 'value': 'degree_8'},
-                                {'label': 'Dataset Degree 9', 'value': 'degree_9'},
-                                {'label': 'Dataset Degree 10', 'value': 'degree_10'},
-
-                            ],
-                            value='degree_1',
-                            clearable=False,
-                            searchable=False,
-                            style={
-                                'color': 'rgb(0, 0, 0)'
-                            }
-                        ),
-                        drc.named_dropdown(
-                            name='Click Mode (Select Custom Data to enable)',
-                            id='dropdown-custom-selection',
-                            options=[
-                                {'label': 'Add Training Data Points', 'value': 'training'},
-                                {'label': 'Add Test Data Points', 'value': 'test'},
-                                {'label': 'Remove Data point', 'value': 'remove'},
-                                {'label': 'Do Nothing', 'value': 'nothing'},
-                            ],
-                            value='training',
-                            clearable=False,
-                            searchable=False,
-                            style={
-                                'color': 'rgb(0, 0, 0)'
-                            }
-                        ),
-                        drc.input_area(
-                            name="Select Dataset Noise Factor",
-                            min=0,
-                            value=0,
-                            id='slider-dataset-noise',
-                            type='number'
-                        ),
-                        drc.input_area(
-                            name="Select Dataset Sample Size",
-                            min=10,
-                            value=300,
-                            id="slider-sample-size",
-                            type='number'
-                        ),
-                        drc.input_area(
-                            name='Select Model Polynomial Degree',
-                            min=0,
-                            max=10,
-                            value=1,
-                            id="slider-polynomial-degree",
-                            type='number'
+                )],
+            style={'display': 'inline-block'}),
+        html.Div(
+            id='div-fitting',
+            className='four columns',
+            children=[
+                dcc.Graph(
+                    id='graph-fitting-display',
+                    className='row',
+                    style={
+                        'height': 'calc(50vh - 160px)',
+                    },
+                    figure=dict(
+                        layout=dict(
+                            plot_bgcolor="#282b38", paper_bgcolor="#282b38"
                         )
-                    ]),
-                ]
-            ),
-        ]),
-    ])
+                    ),
+                    config={'modeBarButtonsToRemove': [
+                        'pan2d',
+                        'lasso2d',
+                        'select2d',
+                        'autoScale2d',
+                        'hoverClosestCartesian',
+                        'hoverCompareCartesian',
+                        'toggleSpikelines'
+                    ]}
+                )]
+        ),
+    ]),
 ])
 
 
