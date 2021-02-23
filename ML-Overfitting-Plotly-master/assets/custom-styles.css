@@ -8,8 +8,8 @@
 /* Banner
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 .banner {
-    height: 75px;
-    background-color: #fc8600; /* Machine Learning Color is orange */
+    height: 100px;
+    background-color: #2f3445; /* Machine Learning Color is orange */
     padding-top: 0px;
     padding-left: 0px;
     padding-right: 0px;
@@ -42,4 +42,13 @@
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 ._dash-undo-redo {
   display: none;
+}
+
+body{
+    background-color: #282b38;
+    color: rgb(255, 255, 255);
+}
+
+.Select-value{
+    color: rgb(0, 0, 0) !important;
 }
