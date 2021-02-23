@@ -187,7 +187,6 @@ def make_dataset(name, random_state, sample_size, noise_factor):
 
     if name == 'dataset #1':
         X = load_boston().data[:, -1].reshape(-1, 1)
-        print(X)
         y = (load_boston().target + 23) * (noise_factor + 1) * -3.75
         if noise_factor:
             y[:100] += (1 + noise_factor * 10)
@@ -361,6 +360,71 @@ def update_graph(dataset, sample_size, degree, noise_factor, custom_data=None):
     )
 
     return go.Figure(data=data, layout=layout)
+
+
+@app.callback(Output('graph-fitting-display', 'figure'),
+              [Input('dropdown-dataset', 'value'),
+               Input('slider-sample-size', 'value'),
+               Input('slider-dataset-noise', 'value')])
+def update_fitting_graph(dataset, sample_size, noise_factor):
+    max_degree_to_check = 10
+    X, y = make_dataset(dataset, RANDOM_STATE, sample_size, noise_factor)
+    X_train, X_test, y_train, y_test = \
+        train_test_split(X, y, test_size=int(X.shape[0] * 0.15), random_state=RANDOM_STATE)
+
+    train_errors = []
+    test_errors = []
+    degrees = list(range(1, max_degree_to_check + 1))
+    for deg in degrees:
+        poly = PolynomialFeatures(degree=deg, include_bias=False)
+        X_train_poly = poly.fit_transform(X_train)
+        X_test_poly = poly.transform(X_test)
+
+        model = LinearRegression()
+
+        # Train model and predict
+        model.fit(X_train_poly, y_train)
+        train_error = mean_squared_error(y_train, model.predict(X_train_poly))
+        test_error = mean_squared_error(y_test, model.predict(X_test_poly))
+        train_errors.append(train_error)
+        test_errors.append(test_error)
+
+    trace_train = go.Scatter(
+        x=degrees,
+        y=train_errors,
+        name='Training MSE',
+        opacity=0.7,
+        marker=dict(color='blue'),
+        line=dict(width=4)
+    )
+
+    trace_test = go.Scatter(
+        x=degrees,
+        y=test_errors,
+        name='Testing MSE',
+        opacity=0.7,
+        marker=dict(color='red'),
+        line=dict(width=4)
+    )
+
+    # noinspection PyTypeChecker
+    layout = go.Layout(
+        title='',
+        legend=dict(orientation='h',
+                    yanchor="top",
+                    y=0.99,
+                    xanchor="left",
+                    x=0.01),
+        margin=dict(l=25, r=25),
+        hovermode='closest',
+        plot_bgcolor="#cbd3f2",
+        paper_bgcolor="#282b38",
+        font=dict(color='rgb(200, 200, 200)', size=15),
+        xaxis=dict(tickvals=degrees),
+        xaxis_title='Polynomial Degree',
+        yaxis_title='Mean Squared Error'
+    )
+    return go.Figure(data=[trace_train, trace_test], layout=layout)
 
 
 # Running the server
