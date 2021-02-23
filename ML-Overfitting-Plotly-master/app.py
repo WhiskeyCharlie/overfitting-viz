@@ -26,8 +26,6 @@ EXTERNAL_CSS = [
     "https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css",
     # Base Stylesheet
     "https://cdn.rawgit.com/xhlulu/9a6e89f418ee40d02b637a429a876aa9/raw/base-styles.css",
-    # Custom Stylesheet
-    # "https://cdn.rawgit.com/plotly/dash-regression/98b5a541/custom-styles.css"
 ]
 
 app = dash.Dash(__name__,
@@ -64,7 +62,6 @@ app.layout = html.Div(children=[
                         options=[
                             {'label': 'Dataset #1', 'value': 'dataset #1'},
                             {'label': 'Dataset #2', 'value': 'dataset #2'},
-                            # {'label': 'Custom Data', 'value': 'custom'},
                             {'label': 'Dataset Degree 0', 'value': 'degree_0'},
                             {'label': 'Dataset Degree 1', 'value': 'degree_1'},
                             {'label': 'Dataset Degree 2', 'value': 'degree_2'},
@@ -103,13 +100,14 @@ app.layout = html.Div(children=[
                         type='number'
                     ),
                     html.Br(),
-                    drc.input_area(
+                    drc.named_slider(
                         name='Select Model Polynomial Degree',
-                        min=0,
+                        min=1,
                         max=10,
                         value=1,
+                        step=1,
                         id="slider-polynomial-degree",
-                        type='number'
+                        marks={str(i): str(i) for i in range(1, 11)}
                     ),
                     html.Br(),
                     html.Br(),
