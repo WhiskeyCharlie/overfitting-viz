@@ -83,18 +83,9 @@ app.layout = html.Div(children=[
                     'overflow-x': 'hidden',
                 },
                 children=[
-                    drc.Card([
-                        # drc.NamedDropdown(
-                        #     name='Select Model',
-                        #     id='dropdown-select-model',
-                        #     options=[
-                        #         {'label': 'Linear Regression', 'value': 'linear'},
-                        #     ],
-                        #     value='linear',
-                        #     searchable=False,
-                        #     clearable=False
-                        # ),
-                        drc.NamedDropdown(
+                    drc.card([
+                        html.Br(), html.Br(), html.Br(), html.Br(),
+                        drc.named_dropdown(
                             name='Select Dataset',
                             id='dropdown-dataset',
                             options=[
@@ -121,7 +112,7 @@ app.layout = html.Div(children=[
                                 'color': 'rgb(0, 0, 0)'
                             }
                         ),
-                        drc.NamedDropdown(
+                        drc.named_dropdown(
                             name='Click Mode (Select Custom Data to enable)',
                             id='dropdown-custom-selection',
                             options=[
@@ -137,21 +128,21 @@ app.layout = html.Div(children=[
                                 'color': 'rgb(0, 0, 0)'
                             }
                         ),
-                        drc.InputArea(
+                        drc.input_area(
                             name="Select Dataset Noise Factor",
                             min=0,
                             value=0,
                             id='slider-dataset-noise',
                             type='number'
                         ),
-                        drc.InputArea(
+                        drc.input_area(
                             name="Select Dataset Sample Size",
                             min=10,
                             value=300,
                             id="slider-sample-size",
                             type='number'
                         ),
-                        drc.InputArea(
+                        drc.input_area(
                             name='Select Model Polynomial Degree',
                             min=0,
                             max=10,

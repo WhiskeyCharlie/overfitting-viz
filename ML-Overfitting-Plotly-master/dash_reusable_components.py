@@ -11,7 +11,7 @@ def _omit(omitted_keys, d):
     return {k: v for k, v in d.items() if k not in omitted_keys}
 
 
-def NamedSlider(name, **kwargs):
+def named_slider(name, **kwargs):
     return html.Div(
         style={'padding': '10px 10px 15px 4px'},
         children=[
@@ -21,14 +21,14 @@ def NamedSlider(name, **kwargs):
     )
 
 
-def NamedDropdown(name, **kwargs):
+def named_dropdown(name, **kwargs):
     return html.Div([
         html.P(f'{name}:', style={'margin-left': '3px'}),
         dcc.Dropdown(**kwargs)
     ])
 
 
-def InputArea(name, **kwargs):
+def input_area(name, **kwargs):
     return html.Div([
         html.P(f'{name}:', style={'margin-left': '3px'}),
         dcc.Input(**kwargs)
@@ -36,5 +36,5 @@ def InputArea(name, **kwargs):
 
 
 # Custom Display Components
-def Card(children, **kwargs):
+def card(children, **kwargs):
     return html.Section(className="card", children=children, **_omit(["style"], kwargs))
