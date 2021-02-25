@@ -1,5 +1,3 @@
-import json
-
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -176,7 +174,7 @@ app.layout = html.Div(children=[
 ])
 
 
-def make_dataset(name, random_state, sample_size, noise_factor):
+def make_dataset(name, random_state, sample_size, noise_factor, out_of_range_proportion=0.025):
     np.random.seed(random_state)
 
     if name == 'dataset #1':
@@ -186,7 +184,6 @@ def make_dataset(name, random_state, sample_size, noise_factor):
             y[:100] += (1 + noise_factor * 10)
             y[250:350] += (20 + noise_factor * 30)
             y[400:] += (1 + noise_factor * 15)
-        return X, y
 
     elif name == 'dataset #2':
         X = load_boston().data[:, -1].reshape(-1, 1)
@@ -195,12 +192,26 @@ def make_dataset(name, random_state, sample_size, noise_factor):
             y[:50] += (5 + noise_factor * 13)
             y[250:350] -= (20 + noise_factor * 3)
             y[450:] += (7 + noise_factor * 25)
-        return X, y
 
     else:
         ds_degree = DS_NAME_TO_DEGREE[name]
         regression_func = reg_functions[ds_degree]
-        return gen_regression_symbolic(m=regression_func, n_samples=sample_size, noise=noise_factor)
+        X, y = gen_regression_symbolic(m=regression_func, n_samples=sample_size, noise=noise_factor)
+
+    X, y = sort_data_and_target(X, y)
+    y = y.flatten()
+    left_border = round(X.shape[0] * out_of_range_proportion)
+    in_range_X = X[left_border:-left_border]
+    in_range_y = y[left_border:-left_border]
+    out_range_X = np.concatenate((X[:left_border], X[-left_border:]), axis=0)
+    out_range_y = np.concatenate((y[:left_border], y[-left_border:]))
+    return in_range_X, in_range_y, out_range_X, out_range_y
+
+
+def sort_data_and_target(X, y):
+    concat_X_y = np.column_stack((X, y))
+    concat_X_y = np.sort(concat_X_y, axis=0)
+    return np.split(concat_X_y, [-1], axis=1)
 
 
 def format_yhat(model):
@@ -239,11 +250,12 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
             np.random.seed(n_clicks or RANDOM_STATE)
             split_random_state = np.random.randint(100)
     # Generate base data
-    X, y = make_dataset(dataset, RANDOM_STATE, sample_size, noise_factor)
+    X, y, X_out_range, y_out_range = make_dataset(dataset, RANDOM_STATE, sample_size, noise_factor)
     X_train, X_test, y_train, y_test = \
         train_test_split(X, y, test_size=int(X.shape[0] * 0.15), random_state=split_random_state)
 
-    X_range = np.linspace(X.min() - 0.5, X.max() + 0.5, sample_size).reshape(-1, 1)
+    X_range = np.linspace(min(X.min(), X_out_range.min()) - 0.5,
+                          max(X.max(), X_out_range.max()) + 0.5, sample_size).reshape(-1, 1)
 
     # Create Polynomial Features
     poly = PolynomialFeatures(degree=degree, include_bias=False)
@@ -260,7 +272,7 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
     test_error = mean_squared_error(y_test, model.predict(X_test_poly))
 
     # Create figure
-    trace0 = go.Scatter(
+    trace_train_in_range = go.Scatter(
         x=X_train.squeeze(),
         y=y_train,
         name='Training Data',
@@ -268,7 +280,7 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
         opacity=0.7,
         marker=dict(size=8)
     )
-    trace1 = go.Scatter(
+    trace_test_in_range = go.Scatter(
         x=X_test.squeeze(),
         y=y_test,
         name='Test Data',
@@ -276,7 +288,17 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
         opacity=0.7,
         marker=dict(size=8)
     )
-    trace2 = go.Scatter(
+
+    trace_test_out_range = go.Scatter(
+        x=X_out_range.squeeze(),
+        y=y_out_range,
+        name='Out Of Range Test Data',
+        mode='markers',
+        opacity=0.7,
+        marker=dict(size=8, color='yellow')
+    )
+
+    trace_prediction = go.Scatter(
         x=X_range.squeeze(),
         y=y_pred_range,
         name='Prediction',
@@ -285,7 +307,7 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
         marker=dict(color='#27ab22'),
         line=dict(width=4)
     )
-    data = [trace0, trace1, trace2]
+    data = [trace_train_in_range, trace_test_in_range, trace_test_out_range, trace_prediction]
 
     layout = go.Layout(
         title=f"MSE: {train_error:.3f} (Train Data) "
@@ -310,17 +332,19 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
                Input('resample-btn', 'n_clicks')])
 def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_clicks=0):
     max_degree_to_check = 10
-    X, y = make_dataset(dataset, RANDOM_STATE, sample_size, noise_factor)
+    X, y, X_out_range, y_out_range = make_dataset(dataset, RANDOM_STATE, sample_size, noise_factor)
     X_train, X_test, y_train, y_test = \
         train_test_split(X, y, test_size=int(X.shape[0] * 0.15), random_state=n_clicks or RANDOM_STATE)
 
     train_errors = []
     test_errors = []
+    out_of_range_test_errors = []
     degrees = list(range(1, max_degree_to_check + 1))
     for deg in degrees:
         poly = PolynomialFeatures(degree=deg, include_bias=False)
         X_train_poly = poly.fit_transform(X_train)
         X_test_poly = poly.transform(X_test)
+        X_test_out_of_range_poly = poly.transform(X_out_range)
 
         model = LinearRegression()
 
@@ -328,8 +352,10 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_cl
         model.fit(X_train_poly, y_train)
         train_error = mean_squared_error(y_train, model.predict(X_train_poly))
         test_error = mean_squared_error(y_test, model.predict(X_test_poly))
+        out_of_range_test_error = mean_squared_error(y_out_range, model.predict(X_test_out_of_range_poly))
         train_errors.append(train_error)
         test_errors.append(test_error)
+        out_of_range_test_errors.append(out_of_range_test_error)
 
     trace_train = go.Scatter(
         x=degrees,
@@ -346,6 +372,15 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_cl
         name='Testing MSE',
         opacity=0.7,
         marker=dict(color='red'),
+        line=dict(width=4)
+    )
+
+    trace_test_out_of_range = go.Scatter(
+        x=degrees,
+        y=out_of_range_test_errors,
+        name='OOR Testing MSE',
+        opacity=0.7,
+        marker=dict(color='yellow'),
         line=dict(width=4)
     )
 
@@ -366,7 +401,7 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_cl
         xaxis_title='Polynomial Degree',
         yaxis_title='Mean Squared Error'
     )
-    fig = go.Figure(data=[trace_train, trace_test], layout=layout)
+    fig = go.Figure(data=[trace_train, trace_test, trace_test_out_of_range], layout=layout)
     fig.add_vline(x=chosen_degree, line_width=3, line_color='#27ab22',
                   annotation=dict(text='Current Degree', textangle=-90, font=dict(color='rgb(0, 0, 0)'),
                                   yshift=-100))
