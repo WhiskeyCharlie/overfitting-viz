@@ -80,6 +80,7 @@ app.layout = html.Div(children=[
                         searchable=False,
                         style={
                             'color': 'rgb(0, 0, 0)',
+                            'width': '100%'
                         }
 
                     ),
@@ -89,7 +90,8 @@ app.layout = html.Div(children=[
                         min=0,
                         value=0,
                         id='slider-dataset-noise',
-                        type='number'
+                        type='number',
+                        style={'width': '100%'}
                     ),
                     html.Br(),
                     drc.input_area(
@@ -97,7 +99,8 @@ app.layout = html.Div(children=[
                         min=10,
                         value=300,
                         id="slider-sample-size",
-                        type='number'
+                        type='number',
+                        style={'width': '100%'}
                     ),
                     html.Br(),
                     drc.named_slider(
@@ -111,7 +114,8 @@ app.layout = html.Div(children=[
                     ),
                     html.Br(),
                     html.Br(),
-                    html.Button('Resample Train/Test', id='resample-btn'),
+                    html.Button('Resample Train/Test',
+                                id='resample-btn', style={'color': 'rgb(200, 200, 200)', 'width': '100%'}),
                     html.Br(),
                 ]),
             ]
@@ -220,21 +224,6 @@ def format_yhat(model):
     return coefficient_string
 
 
-@app.callback(Output('custom-data-storage', 'children'),
-              [Input('graph-regression-display', 'clickData')])
-def update_custom_storage(data):
-    if data is None:
-        data = {
-            'train_X': [1, 2],
-            'train_y': [1, 2],
-            'test_X': [3, 4],
-            'test_y': [3, 4],
-        }
-    else:
-        data = json.loads(data)
-    return json.dumps(data)
-
-
 @app.callback(Output('graph-regression-display', 'figure'),
               [Input('dropdown-dataset', 'value'),
                Input('slider-sample-size', 'value'),
@@ -316,9 +305,10 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
 @app.callback(Output('graph-fitting-display', 'figure'),
               [Input('dropdown-dataset', 'value'),
                Input('slider-sample-size', 'value'),
+               Input('slider-polynomial-degree', 'value'),
                Input('slider-dataset-noise', 'value'),
                Input('resample-btn', 'n_clicks')])
-def update_fitting_graph(dataset, sample_size, noise_factor, n_clicks=0):
+def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_clicks=0):
     max_degree_to_check = 10
     X, y = make_dataset(dataset, RANDOM_STATE, sample_size, noise_factor)
     X_train, X_test, y_train, y_test = \
@@ -376,7 +366,11 @@ def update_fitting_graph(dataset, sample_size, noise_factor, n_clicks=0):
         xaxis_title='Polynomial Degree',
         yaxis_title='Mean Squared Error'
     )
-    return go.Figure(data=[trace_train, trace_test], layout=layout)
+    fig = go.Figure(data=[trace_train, trace_test], layout=layout)
+    fig.add_vline(x=chosen_degree, line_width=3, line_color='#27ab22',
+                  annotation=dict(text='Current Degree', textangle=-90, font=dict(color='rgb(0, 0, 0)'),
+                                  yshift=-100))
+    return fig
 
 
 # Running the server
