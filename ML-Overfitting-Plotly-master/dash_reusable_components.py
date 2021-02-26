@@ -1,5 +1,6 @@
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_bootstrap_components as dbc
 
 
 # Display utility functions
@@ -38,3 +39,7 @@ def input_area(name, **kwargs):
 # Custom Display Components
 def card(children, **kwargs):
     return html.Section(className="card", children=children, **_omit(["style"], kwargs))
+
+
+def custom_tooltip(text, target, placement='top'):
+    return dbc.Tooltip(text, target=target, placement=placement, style={'font-size': 14})
