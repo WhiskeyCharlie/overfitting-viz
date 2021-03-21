@@ -5,7 +5,6 @@ import dash_html_components as html
 import numpy as np
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output
-from sklearn.datasets import load_boston
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
@@ -60,8 +59,8 @@ app.layout = html.Div(children=[
                     name='Dataset',
                     id='dropdown-dataset',
                     options=[
-                        {'label': 'Dataset #1', 'value': 'dataset #1'},
-                        {'label': 'Dataset #2', 'value': 'dataset #2'},
+                        # {'label': 'Dataset #1', 'value': 'dataset #1'},
+                        # {'label': 'Dataset #2', 'value': 'dataset #2'},
                         {'label': 'Dataset Degree 0', 'value': 'degree_0'},
                         {'label': 'Dataset Degree 1', 'value': 'degree_1'},
                         {'label': 'Dataset Degree 2', 'value': 'degree_2'},
@@ -181,41 +180,16 @@ app.layout = html.Div(children=[
 def make_dataset(name, random_state, sample_size, noise_factor, out_of_range_proportion=0.025):
     np.random.seed(random_state)
 
-    if name == 'dataset #1':
-        X = load_boston().data[:, -1].reshape(-1, 1)
-        y = (load_boston().target + 23) * (noise_factor + 1) * -3.75
-        if noise_factor:
-            y[:100] += (1 + noise_factor * 10)
-            y[250:350] += (20 + noise_factor * 30)
-            y[400:] += (1 + noise_factor * 15)
+    ds_degree = DS_NAME_TO_DEGREE[name]
+    regression_func = reg_functions[ds_degree]
+    X, y = gen_regression_symbolic(m=regression_func, n_samples=sample_size, noise=noise_factor)
 
-    elif name == 'dataset #2':
-        X = load_boston().data[:, -1].reshape(-1, 1)
-        y = load_boston().target
-        if noise_factor:
-            y[:50] += (5 + noise_factor * 13)
-            y[250:350] -= (20 + noise_factor * 3)
-            y[450:] += (7 + noise_factor * 25)
-
-    else:
-        ds_degree = DS_NAME_TO_DEGREE[name]
-        regression_func = reg_functions[ds_degree]
-        X, y = gen_regression_symbolic(m=regression_func, n_samples=sample_size, noise=noise_factor)
-
-    X, y = sort_data_and_target(X, y)
-    y = y.flatten()
     left_border = round(X.shape[0] * out_of_range_proportion)
     in_range_X = X[left_border:-left_border]
     in_range_y = y[left_border:-left_border]
     out_range_X = np.concatenate((X[:left_border], X[-left_border:]), axis=0)
     out_range_y = np.concatenate((y[:left_border], y[-left_border:]))
     return in_range_X, in_range_y, out_range_X, out_range_y
-
-
-def sort_data_and_target(X, y):
-    concat_X_y = np.column_stack((X, y))
-    concat_X_y = np.sort(concat_X_y, axis=0)
-    return np.split(concat_X_y, [-1], axis=1)
 
 
 def format_yhat(model):
@@ -255,13 +229,14 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
             split_random_state = np.random.randint(100)
     # Generate base data
     X, y, X_out_range, y_out_range = make_dataset(dataset, RANDOM_STATE, sample_size, noise_factor)
-    X_train, X_test, y_train, y_test = \
-        train_test_split(X, y, test_size=int(X.shape[0] * 0.15), random_state=split_random_state)
+    X_train, X_test, y_train, y_test = train_test_split(X, y,
+                                                        test_size=int(X.shape[0] * 0.15),
+                                                        random_state=split_random_state)
 
     X_range = np.linspace(min(X.min(), X_out_range.min()) - 0.5,
                           max(X.max(), X_out_range.max()) + 0.5, sample_size).reshape(-1, 1)
 
-    # Create Polynomial Features
+    # Create Polynomial Features so that linear regression is actually polynomial regression
     poly = PolynomialFeatures(degree=degree, include_bias=False)
     X_train_poly = poly.fit_transform(X_train)
     X_test_poly = poly.transform(X_test)

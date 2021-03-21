@@ -97,7 +97,7 @@ def gen_regression_symbolic(m=None, n_samples=100, n_features=2, noise=0.0, nois
 
     n_features = len(sym_m.atoms(Symbol))
     evaluations = []
-    lst_features = [np.random.uniform(-2, 2, size=n_samples)]
+    lst_features = [np.sort(np.random.uniform(-2, 2, size=n_samples))]
 
     lst_features = np.array(lst_features)
     lst_features = lst_features.T
