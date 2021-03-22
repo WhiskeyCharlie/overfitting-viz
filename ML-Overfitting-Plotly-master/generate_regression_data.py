@@ -69,7 +69,8 @@ def eval_multinomial(s, values=None, symbolic_eval=False):
     return result
 
 
-def gen_regression_symbolic(m=None, n_samples=100, n_features=2, noise=0.0, noise_dist='normal'):
+def gen_regression_symbolic(m=None, n_samples=100, n_features=2, noise=0.0, noise_dist='normal',
+                            n_out_of_range_samples=10):
     """
     Generates regression sample based on a symbolic expression. Calculates the output of the symbolic expression
     at randomly generated (drawn from a Gaussian distribution) points
@@ -84,7 +85,7 @@ def gen_regression_symbolic(m=None, n_samples=100, n_features=2, noise=0.0, nois
 
     Returns a numpy ndarray with dimension (n_samples,n_features+1). Last column is the response vector.
     """
-
+    # TODO: this function is in dire need of rewriting
     if m is None:
         m = ''
         for i in range(1, n_features + 1):
@@ -97,36 +98,56 @@ def gen_regression_symbolic(m=None, n_samples=100, n_features=2, noise=0.0, nois
 
     n_features = len(sym_m.atoms(Symbol))
     evaluations = []
+    evaluations_out_of_range = []
     lst_features = [np.sort(np.random.uniform(-2, 2, size=n_samples))]
+    samples_per_side = n_out_of_range_samples // 2
+    lst_features_out_of_range = [np.concatenate((np.sort(np.random.uniform(-2.25, -2, size=samples_per_side)),
+                                                 np.sort(np.random.uniform(2, 2.25, size=samples_per_side))))]
 
     lst_features = np.array(lst_features)
     lst_features = lst_features.T
     n_features = 1 if n_features == 0 else n_features
     lst_features = lst_features.reshape(n_samples, n_features)
 
+    lst_features_out_of_range = np.array(lst_features_out_of_range)
+    lst_features_out_of_range = lst_features_out_of_range.T
+    n_features = 1 if n_features == 0 else n_features
+    lst_features_out_of_range = lst_features_out_of_range.reshape(len(lst_features_out_of_range), n_features)
+
     if sym_m.is_Integer or sym_m.is_Float:
         evaluations = [sym_m] * n_samples
+        evaluations_out_of_range = [sym_m] * len(lst_features_out_of_range)
 
     else:
         for i in range(n_samples):
             evaluations.append(eval_multinomial(m, values=list(lst_features[i])))
+        for i in range(len(lst_features_out_of_range)):
+            evaluations_out_of_range.append(eval_multinomial(m, values=list(lst_features_out_of_range[i])))
 
     evaluations = np.array(evaluations)
     evaluations = evaluations.astype(np.float64)
+    evaluations_out_of_range = np.array(evaluations_out_of_range)
+    evaluations_out_of_range = evaluations_out_of_range.astype(np.float64)
 
     if noise_dist == 'normal':
         noise_sample = np.random.normal(loc=0, scale=noise, size=n_samples)
+        noise_sample_out_of_range = np.random.normal(loc=0, scale=noise, size=len(evaluations_out_of_range))
     elif noise_dist == 'uniform':
         noise_sample = noise * np.random.uniform(low=0, high=1.0, size=n_samples)
+        noise_sample_out_of_range = noise * np.random.uniform(low=0, high=1.0, size=len(evaluations_out_of_range))
     elif noise_dist == 'beta':
         noise_sample = noise * np.random.beta(a=0.5, b=1.0, size=n_samples)
+        noise_sample_out_of_range = noise * np.random.beta(a=0.5, b=1.0, size=len(evaluations_out_of_range))
     elif noise_dist == 'Gamma':
         noise_sample = noise * np.random.gamma(shape=1.0, scale=1.0, size=n_samples)
+        noise_sample_out_of_range = noise * np.random.gamma(shape=1.0, scale=1.0, size=len(evaluations_out_of_range))
     elif noise_dist == 'laplace':
         noise_sample = noise * np.random.laplace(loc=0.0, scale=1.0, size=n_samples)
+        noise_sample_out_of_range = noise * np.random.laplace(loc=0.0, scale=1.0, size=len(evaluations_out_of_range))
     else:
         raise ValueError('Unsupported Noise Distribution')
 
     evaluations = evaluations + noise_sample
+    evaluations_out_of_range = evaluations_out_of_range + noise_sample_out_of_range
 
-    return lst_features, evaluations
+    return lst_features, evaluations, lst_features_out_of_range, evaluations_out_of_range

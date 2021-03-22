@@ -182,14 +182,8 @@ def make_dataset(name, random_state, sample_size, noise_factor, out_of_range_pro
 
     ds_degree = DS_NAME_TO_DEGREE[name]
     regression_func = reg_functions[ds_degree]
-    X, y = gen_regression_symbolic(m=regression_func, n_samples=sample_size, noise=noise_factor)
-
-    left_border = round(X.shape[0] * out_of_range_proportion)
-    in_range_X = X[left_border:-left_border]
-    in_range_y = y[left_border:-left_border]
-    out_range_X = np.concatenate((X[:left_border], X[-left_border:]), axis=0)
-    out_range_y = np.concatenate((y[:left_border], y[-left_border:]))
-    return in_range_X, in_range_y, out_range_X, out_range_y
+    return gen_regression_symbolic(m=regression_func, n_samples=sample_size, noise=noise_factor,
+                                   n_out_of_range_samples=round(0.025 * sample_size))
 
 
 def format_yhat(model):
