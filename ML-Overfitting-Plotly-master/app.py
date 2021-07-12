@@ -12,9 +12,8 @@ from sklearn.preprocessing import PolynomialFeatures
 
 import dash_reusable_components as drc
 import tooltip_data as ttd
-
 from dataset_generation import DatasetGenerator
-
+from general_utils import format_yhat
 
 RANDOM_STATE = 718
 
@@ -31,6 +30,7 @@ app = dash.Dash(__name__,
                 external_stylesheets=EXTERNAL_CSS)
 server = app.server
 
+# This block of code defines the layout of the app, meaning its physical structure: sliders, buttons, etc.
 app.layout = html.Div(children=[
     # .container class is fixed, .container.scalable is scalable
     html.Div(className="banner", children=[
@@ -176,27 +176,6 @@ app.layout = html.Div(children=[
 ])
 
 
-def format_yhat(model):
-    coefficients = model.coef_
-    intercept = model.intercept_
-    model_values = np.insert(coefficients, 0, intercept)
-    coefficient_string = "yhat = "
-
-    for order, coefficient in enumerate(model_values):
-        if coefficient >= 0:
-            sign = ' + '
-        else:
-            sign = ' - '
-        if order == 0:
-            coefficient_string += f'{coefficient}'
-        elif order == 1:
-            coefficient_string += sign + f'{abs(coefficient):.3f}*x'
-        else:
-            coefficient_string += sign + f'{abs(coefficient):.3f}*x^{order}'
-
-    return coefficient_string
-
-
 @app.callback(Output('graph-regression-display', 'figure'),
               [Input('dropdown-dataset', 'value'),
                Input('slider-sample-size', 'value'),
@@ -205,11 +184,21 @@ def format_yhat(model):
                Input('resample-btn', 'n_clicks')])
 def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
                  split_random_state=RANDOM_STATE):
+    """
+    Function called any time the graph needs to be updated. We redraws the graph from scratch
+    :param dataset: Name of the dataset to generate
+    :param sample_size: How many points to generate
+    :param degree: Degree of the polynomial to fit to the graph
+    :param noise_factor: How much noise should be added to the data (how much it deviates from the true function)
+    :param n_clicks: How many times has the resample button been pressed
+    :param split_random_state: The random state under which to split the data into training and test
+    :return: The figure, essentially the main graph to display
+    """
     ctx = dash.callback_context
     if ctx.triggered:
         button_is_event = ctx.triggered[0]['prop_id'].split('.')[0] == 'resample-btn'
         if button_is_event:
-            np.random.seed(n_clicks or RANDOM_STATE)
+            np.random.seed(n_clicks or RANDOM_STATE)  # This hack takes RANDOM_STATE if n_clicks is 0, else n_clicks
             split_random_state = np.random.randint(100)
     generator = DatasetGenerator(dataset, RANDOM_STATE, sample_size, noise_factor)
     X, y, X_out_range, y_out_range = generator.make_dataset(use_random_seed=True)
@@ -294,6 +283,15 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
                Input('slider-dataset-noise', 'value'),
                Input('resample-btn', 'n_clicks')])
 def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_clicks=0):
+    """
+    Function called any time the graph needs to be updated. We redraws the graph from scratch
+    :param dataset: Name of the dataset to generate
+    :param sample_size: How many points to generate
+    :param chosen_degree: The degree of the polynomial the user is trying to fit to the dataset (draws vertical line)
+    :param noise_factor: How much noise should be added to the data (how much it deviates from the true function)
+    :param n_clicks: How many times has the resample button been pressed
+    :return: The figure, essentially the main graph to display
+    """
     max_degree_to_check = 10
     generator = DatasetGenerator(dataset, RANDOM_STATE, sample_size, noise_factor)
     X, y, X_out_range, y_out_range = generator.make_dataset(True)
@@ -376,10 +374,7 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_cl
 if __name__ == '__main__':
     app.run_server(port=2522, debug=True)
 
-# TODO: Noise seems broken to me. It seems to add far too much noise for low values for instance
-# As a patch, I multiplied the noise factor by 1/10, seems a little better behaved now.
-# Now it doesn't seem to work well for the datasets with a greater output range (e.g. dataset degree 7)
-# Possible solution: use the max range in choosing the noise amount.
-# TODO: dataset generation should be all in one place
+# TODO: Noise seems broken to me. It seems to add far too much noise for low values for instance FIXED?
+# TODO: dataset generation should be all in one place DONE
 # TODO: Easy-to-use documentation for entire project
-# TODO: Commented code everywhere with good explanations
+# TODO: Commented code everywhere with good explanations IN PROGRESS
