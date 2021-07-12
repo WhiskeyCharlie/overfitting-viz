@@ -172,7 +172,7 @@ app.layout = html.Div(children=[
         ),
     ]),
     drc.custom_tooltip(ttd.SLIDER_DATASET_NOISE, target='slider-dataset-noise'),
-    drc.custom_tooltip(ttd.SLIDER_POLYNOMIAL_DEGREE, target='slider-polynomial-degree'),
+    # drc.custom_tooltip(ttd.SLIDER_POLYNOMIAL_DEGREE, target='slider-polynomial-degree'),
     drc.custom_tooltip(ttd.RESAMPLE_BUTTON, target='resample-btn'),
 ])
 
@@ -183,7 +183,7 @@ def make_dataset(name, random_state, sample_size, noise_factor, out_of_range_pro
     ds_degree = DS_NAME_TO_DEGREE[name]
     regression_func = reg_functions[ds_degree]
     return gen_regression_symbolic(m=regression_func, n_samples=sample_size, noise=noise_factor,
-                                   n_out_of_range_samples=round(0.025 * sample_size))
+                                   n_out_of_range_samples=round(out_of_range_proportion * sample_size))
 
 
 def format_yhat(model):
@@ -222,6 +222,7 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
             np.random.seed(n_clicks or RANDOM_STATE)
             split_random_state = np.random.randint(100)
     # Generate base data
+    noise_factor *= 0.5
     X, y, X_out_range, y_out_range = make_dataset(dataset, RANDOM_STATE, sample_size, noise_factor)
     X_train, X_test, y_train, y_test = train_test_split(X, y,
                                                         test_size=int(X.shape[0] * 0.15),
@@ -305,6 +306,7 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
                Input('resample-btn', 'n_clicks')])
 def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_clicks=0):
     max_degree_to_check = 10
+    noise_factor *= 0.5
     X, y, X_out_range, y_out_range = make_dataset(dataset, RANDOM_STATE, sample_size, noise_factor)
     X_train, X_test, y_train, y_test = \
         train_test_split(X, y, test_size=int(X.shape[0] * 0.15), random_state=n_clicks or RANDOM_STATE)
@@ -384,3 +386,11 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_cl
 # Running the server
 if __name__ == '__main__':
     app.run_server(port=2522, debug=True)
+
+# TODO: Noise seems broken to me. It seems to add far too much noise for low values for instance
+# As a patch, I multiplied the noise factor by 1/10, seems a little better behaved now.
+# Now it doesn't seem to work well for the datasets with a greater output range (e.g. dataset degree 7)
+# Possible solution: use the max range in choosing the noise amount.
+# TODO: dataset generation should be all in one place
+# TODO: Easy-to-use documentation for entire project
+# TODO: Commented code everywhere with good explanations
