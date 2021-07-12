@@ -12,12 +12,11 @@ from sklearn.preprocessing import PolynomialFeatures
 
 import dash_reusable_components as drc
 import tooltip_data as ttd
-from generate_regression_data import reg_functions, gen_regression_symbolic
+
+from dataset_generation import DatasetGenerator
+
 
 RANDOM_STATE = 718
-DS_NAME_TO_DEGREE = {'degree_0': 0, 'degree_1': 1, 'degree_2': 2, 'degree_3': 3,
-                     'degree_4': 4, 'degree_5': 5, 'degree_6': 6, 'degree_7': 7, 'degree_8': 8,
-                     'degree_9': 9, 'degree_10': 10}
 
 EXTERNAL_CSS = [
     "https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css",
@@ -177,15 +176,6 @@ app.layout = html.Div(children=[
 ])
 
 
-def make_dataset(name, random_state, sample_size, noise_factor, out_of_range_proportion=0.025):
-    np.random.seed(random_state)
-
-    ds_degree = DS_NAME_TO_DEGREE[name]
-    regression_func = reg_functions[ds_degree]
-    return gen_regression_symbolic(m=regression_func, n_samples=sample_size, noise=noise_factor,
-                                   n_out_of_range_samples=round(out_of_range_proportion * sample_size))
-
-
 def format_yhat(model):
     coefficients = model.coef_
     intercept = model.intercept_
@@ -221,9 +211,8 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
         if button_is_event:
             np.random.seed(n_clicks or RANDOM_STATE)
             split_random_state = np.random.randint(100)
-    # Generate base data
-    noise_factor *= 0.5
-    X, y, X_out_range, y_out_range = make_dataset(dataset, RANDOM_STATE, sample_size, noise_factor)
+    generator = DatasetGenerator(dataset, RANDOM_STATE, sample_size, noise_factor)
+    X, y, X_out_range, y_out_range = generator.make_dataset(use_random_seed=True)
     X_train, X_test, y_train, y_test = train_test_split(X, y,
                                                         test_size=int(X.shape[0] * 0.15),
                                                         random_state=split_random_state)
@@ -306,8 +295,8 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
                Input('resample-btn', 'n_clicks')])
 def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_clicks=0):
     max_degree_to_check = 10
-    noise_factor *= 0.5
-    X, y, X_out_range, y_out_range = make_dataset(dataset, RANDOM_STATE, sample_size, noise_factor)
+    generator = DatasetGenerator(dataset, RANDOM_STATE, sample_size, noise_factor)
+    X, y, X_out_range, y_out_range = generator.make_dataset(True)
     X_train, X_test, y_train, y_test = \
         train_test_split(X, y, test_size=int(X.shape[0] * 0.15), random_state=n_clicks or RANDOM_STATE)
 
