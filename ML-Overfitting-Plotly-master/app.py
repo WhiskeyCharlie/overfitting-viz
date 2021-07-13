@@ -378,3 +378,4 @@ if __name__ == '__main__':
 # TODO: dataset generation should be all in one place DONE
 # TODO: Easy-to-use documentation for entire project
 # TODO: Commented code everywhere with good explanations IN PROGRESS
+# TODO: Completely rework generate_regression_data to better fit our needs and be extensible

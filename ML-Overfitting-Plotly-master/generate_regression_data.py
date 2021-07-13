@@ -2,11 +2,13 @@ import numpy as np
 from sympy import Symbol, sympify
 
 
+# TODO: simplify this entire file as much as possible, changing internal representation
+
 def compute_reg_functions(number_of_functions=12):
     final_funcs = []
     for i in range(1, number_of_functions):
         func_string = ''
-        coefficients = np.random.uniform(-1, 1, size=i)
+        coefficients = np.random.uniform(-1, 1, size=i)  # TODO: should this range be different?
         for order, coefficient in enumerate(coefficients):
             sign = ' + ' if coefficient >= 0 else ' - '
             if order == 0:
