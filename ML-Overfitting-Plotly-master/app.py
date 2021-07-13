@@ -374,8 +374,6 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_cl
 if __name__ == '__main__':
     app.run_server(port=2522, debug=True)
 
-# TODO: Noise seems broken to me. It seems to add far too much noise for low values for instance FIXED?
-# TODO: dataset generation should be all in one place DONE
 # TODO: Easy-to-use documentation for entire project
 # TODO: Commented code everywhere with good explanations IN PROGRESS
-# TODO: Completely rework generate_regression_data to better fit our needs and be extensible
+# TODO: Completely rework generate_regression_data to better fit our needs and be extensible DONE
