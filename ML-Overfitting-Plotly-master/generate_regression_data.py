@@ -1,153 +1,55 @@
+from typing import List, Tuple
+
 import numpy as np
-from sympy import Symbol, sympify
 
 
-# TODO: simplify this entire file as much as possible, changing internal representation
-
-def compute_reg_functions(number_of_functions=12):
-    final_funcs = []
-    for i in range(1, number_of_functions):
-        func_string = ''
-        coefficients = np.random.uniform(-1, 1, size=i)  # TODO: should this range be different?
-        for order, coefficient in enumerate(coefficients):
-            sign = ' + ' if coefficient >= 0 else ' - '
-            if order == 0:
-                func_string += f'{coefficient}'
-            elif order == 1:
-                func_string += sign + f'{abs(coefficient):.3f}*x1'
-            else:
-                func_string += sign + f'{abs(coefficient):.3f}*x1**{order}'
-
-        final_funcs.append(func_string)
-
-    return final_funcs
-
-
-reg_functions = compute_reg_functions()
-
-
-def symbolize(s):
+def generate_list_of_regression_functions(number_of_functions=11) -> List[np.polynomial.Polynomial]:
     """
-    Converts a a string (equation) to a SymPy symbol object
+    Make a list of random polynomial functions against which data will be generated.
+    :param number_of_functions: How many functions should we generate (In general, don't change this)
+    :return: A list of numpy Polynomials ranging from degree 1 to number_of_functions (inclusively)
     """
-    # s1 = s.replace('.', '*')
-    # s2 = s1.replace('^', '**')
-    s3 = sympify(s)
-
-    return s3
+    return [np.polynomial.Polynomial(np.random.uniform(-1, 1, size=i)) for i in range(1, number_of_functions + 1)]
 
 
-def eval_multinomial(s, values=None, symbolic_eval=False):
+REG_FUNCTIONS = generate_list_of_regression_functions()
+
+
+def eval_polynomial(polynomial: np.polynomial.Polynomial, values: np.array) -> np.array:
     """
-    Evaluates polynomial at values.
-    values can be simple list, dictionary, or tuple of values.
-    values can also contain symbols instead of real values provided those symbols have been declared before using SymPy
+    Evaluate the given polynomial at all points in values given (vectorized)
+    :param polynomial: Given polynomial
+    :param values: Values at which to evaluate polynomial
+    :return: Numpy array of Evaluations, cast to np.float64
     """
-    sym_s = symbolize(s)
-    sym_set = sym_s.atoms(Symbol)
-    sym_lst = []
-    for s in sym_set:
-        sym_lst.append(str(s))
-    sym_lst.sort()
-    if symbolic_eval is False and len(sym_set) != len(values):
-        print("Length of the input values did not match number of variables and symbolic evaluation is not selected")
-        return None
-    else:
-        if type(values) == list:
-            sub = list(zip(sym_lst, values))
-        elif type(values) == dict:
-            lst = list(values.keys())
-            lst.sort()
-            lst = []
-            for i in lst:
-                lst.append(values[i])
-            sub = list(zip(sym_lst, lst))
-        elif type(values) == tuple:
-            sub = list(zip(sym_lst, list(values)))
-        else:
-            raise TypeError(f'"values" type should have been one of list, dict, tuple, but was {type(values)}')
-        result = sym_s.subs(sub)
-
-    return result
+    return polynomial(values).squeeze().astype(np.float64)
 
 
-def gen_regression_symbolic(m=None, n_samples=100, n_features=2, noise=0.0, noise_dist='normal',
-                            n_out_of_range_samples=10):
+def generate_regression_data(polynomial: np.polynomial.Polynomial, n_samples=100, noise=0.0,
+                             n_out_of_range_samples=10) -> Tuple[np.array, np.array, np.array, np.array]:
     """
-    Generates regression sample based on a symbolic expression. Calculates the output of the symbolic expression
-    at randomly generated (drawn from a Gaussian distribution) points
-    m: The symbolic expression. Needs x1, x2, etc as variables and regular python arithmetic symbols to be used.
-    n_samples: Number of samples to be generated
-    n_features: Number of variables. This is automatically inferred from the symbolic expression. So this is ignored
-                in case a symbolic expression is supplied. However if no symbolic expression is supplied then a
-                default simple polynomial can be invoked to generate regression samples with n_features.
-    noise: Magnitude of Gaussian noise to be introduced (added to the output).
-    noise_dist: Type of the probability distribution of the noise signal.
-    Currently supports: Normal, Uniform, t, Beta, Gamma, Poisson, Laplace
-
-    Returns a numpy ndarray with dimension (n_samples,n_features+1). Last column is the response vector.
+    Generates the actual data for to fit including (possibly) noise
+    :param polynomial: Polynomial to generate the data for
+    :param n_samples: Number of points to generate
+    :param noise: Amount of gaussian noise to introduce
+    :param n_out_of_range_samples: How many out of range samples to add to the data (points appearing on the extremes)
+    :return: X, y, X_out_of_range, y_out_of_range
     """
-    # TODO: this function is in dire need of rewriting
-    if m is None:
-        m = ''
-        for i in range(1, n_features + 1):
-            c = 'x' + str(i)
-            c += np.random.choice(['+', '-'], p=[0.5, 0.5])
-            m += c
-        m = m[:-1]
 
-    sym_m = sympify(m)
-
-    n_features = len(sym_m.atoms(Symbol))
-    evaluations = []
-    evaluations_out_of_range = []
     lst_features = [np.sort(np.random.uniform(-2, 2, size=n_samples))]
     samples_per_side = n_out_of_range_samples // 2
     lst_features_out_of_range = [np.concatenate((np.sort(np.random.uniform(-2.25, -2, size=samples_per_side)),
                                                  np.sort(np.random.uniform(2, 2.25, size=samples_per_side))))]
 
-    lst_features = np.array(lst_features)
-    lst_features = lst_features.T
-    n_features = 1 if n_features == 0 else n_features
-    lst_features = lst_features.reshape(n_samples, n_features)
+    lst_features = np.array(lst_features).T
 
-    lst_features_out_of_range = np.array(lst_features_out_of_range)
-    lst_features_out_of_range = lst_features_out_of_range.T
-    n_features = 1 if n_features == 0 else n_features
-    lst_features_out_of_range = lst_features_out_of_range.reshape(len(lst_features_out_of_range), n_features)
+    lst_features_out_of_range = np.array(lst_features_out_of_range).T
 
-    if sym_m.is_Integer or sym_m.is_Float:
-        evaluations = [sym_m] * n_samples
-        evaluations_out_of_range = [sym_m] * len(lst_features_out_of_range)
+    evaluations = eval_polynomial(polynomial, lst_features)
+    evaluations_out_of_range = eval_polynomial(polynomial, lst_features_out_of_range)
 
-    else:
-        for i in range(n_samples):
-            evaluations.append(eval_multinomial(m, values=list(lst_features[i])))
-        for i in range(len(lst_features_out_of_range)):
-            evaluations_out_of_range.append(eval_multinomial(m, values=list(lst_features_out_of_range[i])))
-
-    evaluations = np.array(evaluations)
-    evaluations = evaluations.astype(np.float64)
-    evaluations_out_of_range = np.array(evaluations_out_of_range)
-    evaluations_out_of_range = evaluations_out_of_range.astype(np.float64)
-
-    if noise_dist == 'normal':
-        noise_sample = np.random.normal(loc=0, scale=noise, size=n_samples)
-        noise_sample_out_of_range = np.random.normal(loc=0, scale=noise, size=len(evaluations_out_of_range))
-    elif noise_dist == 'uniform':
-        noise_sample = noise * np.random.uniform(low=0, high=1.0, size=n_samples)
-        noise_sample_out_of_range = noise * np.random.uniform(low=0, high=1.0, size=len(evaluations_out_of_range))
-    elif noise_dist == 'beta':
-        noise_sample = noise * np.random.beta(a=0.5, b=1.0, size=n_samples)
-        noise_sample_out_of_range = noise * np.random.beta(a=0.5, b=1.0, size=len(evaluations_out_of_range))
-    elif noise_dist == 'Gamma':
-        noise_sample = noise * np.random.gamma(shape=1.0, scale=1.0, size=n_samples)
-        noise_sample_out_of_range = noise * np.random.gamma(shape=1.0, scale=1.0, size=len(evaluations_out_of_range))
-    elif noise_dist == 'laplace':
-        noise_sample = noise * np.random.laplace(loc=0.0, scale=1.0, size=n_samples)
-        noise_sample_out_of_range = noise * np.random.laplace(loc=0.0, scale=1.0, size=len(evaluations_out_of_range))
-    else:
-        raise ValueError('Unsupported Noise Distribution')
+    noise_sample = np.random.normal(loc=0, scale=noise, size=n_samples)
+    noise_sample_out_of_range = np.random.normal(loc=0, scale=noise, size=len(evaluations_out_of_range))
 
     evaluations = evaluations + noise_sample
     evaluations_out_of_range = evaluations_out_of_range + noise_sample_out_of_range

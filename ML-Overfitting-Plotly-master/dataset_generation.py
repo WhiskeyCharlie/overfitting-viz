@@ -2,7 +2,7 @@ from typing import Tuple
 
 import numpy as np
 
-from generate_regression_data import reg_functions, gen_regression_symbolic
+from generate_regression_data import REG_FUNCTIONS, generate_regression_data
 
 
 class DatasetGenerator:
@@ -31,9 +31,9 @@ class DatasetGenerator:
             self.set_seed()
 
         ds_degree = DatasetGenerator.dataset_name_to_degree[self.__name]
-        regression_func = reg_functions[ds_degree]
-        return gen_regression_symbolic(m=regression_func, n_samples=self.__sample_size, noise=self.__noise_factor,
-                                       n_out_of_range_samples=self.__n_out_of_range_samples)
+        regression_func = REG_FUNCTIONS[ds_degree]
+        return generate_regression_data(regression_func, n_samples=self.__sample_size, noise=self.__noise_factor,
+                                        n_out_of_range_samples=self.__n_out_of_range_samples)
 
     def set_seed(self):
         np.random.seed(self.__random_state)
