@@ -200,8 +200,8 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
         if button_is_event:
             np.random.seed(n_clicks or RANDOM_STATE)  # This hack takes RANDOM_STATE if n_clicks is 0, else n_clicks
             split_random_state = np.random.randint(100)
-    generator = DatasetGenerator(dataset, RANDOM_STATE, sample_size, noise_factor)
-    X, y, X_out_range, y_out_range = generator.make_dataset(use_random_seed=True)
+    generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
+    X, y, X_out_range, y_out_range = generator.make_dataset()
     X_train, X_test, y_train, y_test = train_test_split(X, y,
                                                         test_size=int(X.shape[0] * 0.15),
                                                         random_state=split_random_state)
@@ -293,8 +293,8 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_cl
     :return: The figure, essentially the main graph to display
     """
     max_degree_to_check = 10
-    generator = DatasetGenerator(dataset, RANDOM_STATE, sample_size, noise_factor)
-    X, y, X_out_range, y_out_range = generator.make_dataset(True)
+    generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
+    X, y, X_out_range, y_out_range = generator.make_dataset()
     X_train, X_test, y_train, y_test = \
         train_test_split(X, y, test_size=int(X.shape[0] * 0.15), random_state=n_clicks or RANDOM_STATE)
 
