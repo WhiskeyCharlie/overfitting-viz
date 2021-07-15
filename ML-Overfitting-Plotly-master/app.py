@@ -29,7 +29,7 @@ add_layout_to_app(app)
 def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
                  split_random_state=RANDOM_STATE):
     """
-    Function called any time the graph needs to be updated. We redraws the graph from scratch
+    Function called any time the graph needs to be updated. We redraw the graph from scratch
     :param dataset: Name of the dataset to generate
     :param sample_size: How many points to generate
     :param degree: Degree of the polynomial to fit to the graph
