@@ -1,3 +1,6 @@
+"""
+The main driver of the app
+"""
 import dash
 import numpy as np
 import plotly.graph_objs as go
@@ -33,22 +36,24 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
     :param dataset: Name of the dataset to generate
     :param sample_size: How many points to generate
     :param degree: Degree of the polynomial to fit to the graph
-    :param noise_factor: How much noise should be added to the data (how much it deviates from the true function)
+    :param noise_factor: How much noise to add to the data (how much deviation from true function)
     :param n_clicks: How many times has the resample button been pressed
-    :param split_random_state: The random state under which to split the data into training and test
+    :param split_random_state: The random state under which to split data into training and test
     :return: The figure, essentially the main graph to display
     """
     ctx = dash.callback_context
     if ctx.triggered:
         button_is_event = ctx.triggered[0]['prop_id'].split('.')[0] == 'resample-btn'
         if button_is_event:
-            np.random.seed(n_clicks or RANDOM_STATE)  # This hack takes RANDOM_STATE if n_clicks is 0, else n_clicks
+            # This hack takes RANDOM_STATE if n_clicks is 0, else n_clicks
+            np.random.seed(n_clicks or RANDOM_STATE)
             split_random_state = np.random.randint(100)
     generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
     X, y, X_out_range, y_out_range = generator.make_dataset()
-    X_train, X_test, y_train, y_test = train_test_split(X, y,
-                                                        test_size=int(X.shape[0] * TESTING_DATA_PROPORTION),
-                                                        random_state=split_random_state)
+    X_train, X_test, y_train, y_test = \
+        train_test_split(X, y,
+                         test_size=int(X.shape[0] * TESTING_DATA_PROPORTION),
+                         random_state=split_random_state)
 
     X_range = np.linspace(min(X.min(), X_out_range.min()) - 0.5,
                           max(X.max(), X_out_range.max()) + 0.5, sample_size).reshape(-1, 1)
@@ -131,8 +136,8 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_cl
     Function called any time the graph needs to be updated. We redraws the graph from scratch
     :param dataset: Name of the dataset to generate
     :param sample_size: How many points to generate
-    :param chosen_degree: The degree of the polynomial the user is trying to fit to the dataset (draws vertical line)
-    :param noise_factor: How much noise should be added to the data (how much it deviates from the true function)
+    :param chosen_degree: Degree of polynomial user fits to the dataset (draws vertical line)
+    :param noise_factor: How much noise to add to data (deviation from the true function)
     :param n_clicks: How many times has the resample button been pressed
     :return: The figure, essentially the main graph to display
     """
@@ -160,7 +165,8 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_cl
         model.fit(X_train_poly, y_train)
         train_error = mean_squared_error(y_train, model.predict(X_train_poly))
         test_error = mean_squared_error(y_test, model.predict(X_test_poly))
-        out_of_range_test_error = mean_squared_error(y_out_range, model.predict(X_test_out_of_range_poly))
+        out_of_range_test_error = \
+            mean_squared_error(y_out_range, model.predict(X_test_out_of_range_poly))
         train_errors.append(train_error)
         test_errors.append(test_error)
         out_of_range_test_errors.append(out_of_range_test_error)
@@ -211,14 +217,16 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_cl
     )
     fig = go.Figure(data=[trace_train, trace_test, trace_test_out_of_range], layout=layout)
     fig.add_vline(x=chosen_degree, line_width=3, line_color='#27ab22',
-                  annotation=dict(text='Current Degree', textangle=-90, font=dict(color='rgb(0, 0, 0)'),
+                  annotation=dict(text='Current Degree', textangle=-90,
+                                  font=dict(color='rgb(0, 0, 0)'),
                                   yshift=-100))
     return fig
 
 
 # Running the server
 if __name__ == '__main__':
-    # NOTE: do not set debug=True in the below function call if you intend to compile it! The executable will crash!
+    # NOTE: do not set debug=True in the below function call if you intend to compile it!
+    # The executable will crash!
     app.run_server(port=2522, dev_tools_silence_routes_logging=True)
 
 # TODO: Easy-to-use documentation for entire project
