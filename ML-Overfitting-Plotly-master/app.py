@@ -1,5 +1,4 @@
 import dash
-
 import numpy as np
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output
@@ -7,12 +6,12 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PolynomialFeatures
+
 from dataset_generation import DatasetGenerator
 from general_utils import format_yhat
 from layout import add_layout_to_app, EXTERNAL_CSS
 
 RANDOM_STATE = 718
-
 
 app = dash.Dash(__name__, external_stylesheets=EXTERNAL_CSS)
 server = app.server

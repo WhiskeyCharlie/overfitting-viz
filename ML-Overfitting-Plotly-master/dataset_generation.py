@@ -30,22 +30,18 @@ class DatasetGenerator:
 
         ds_degree = DatasetGenerator.dataset_name_to_degree[self.__name]
         regression_func = self.__regression_functions[ds_degree]
-        return self.__generate_regression_data(regression_func, n_samples=self.__sample_size, noise=self.__noise_factor,
-                                               n_out_of_range_samples=self.__n_out_of_range_samples)
+        return self.__generate_regression_data(regression_func)
 
-    def __generate_regression_data(self, polynomial: np.polynomial.Polynomial, n_samples=100, noise=0.0,
-                                   n_out_of_range_samples=10) -> Tuple[np.array, np.array, np.array, np.array]:
+    def __generate_regression_data(self, polynomial: np.polynomial.Polynomial) -> \
+            Tuple[np.array, np.array, np.array, np.array]:
         """
         Generates the actual data for to fit including (possibly) noise
         :param polynomial: Polynomial to generate the data for
-        :param n_samples: Number of points to generate
-        :param noise: Amount of gaussian noise to introduce
-        :param n_out_of_range_samples: How many out of range samples to add to the data (points appearing on the extremes)
         :return: X, y, X_out_of_range, y_out_of_range
         """
 
-        lst_features = [np.sort(self.__rng.uniform(-2, 2, size=n_samples))]
-        samples_per_side = n_out_of_range_samples // 2
+        lst_features = [np.sort(self.__rng.uniform(-2, 2, size=self.__sample_size))]
+        samples_per_side = self.__n_out_of_range_samples // 2
         lst_features_out_of_range = [np.concatenate((np.sort(self.__rng.uniform(-2.25, -2, size=samples_per_side)),
                                                      np.sort(self.__rng.uniform(2, 2.25, size=samples_per_side))))]
 
@@ -56,8 +52,9 @@ class DatasetGenerator:
         evaluations = DatasetGenerator.__eval_polynomial(polynomial, lst_features)
         evaluations_out_of_range = DatasetGenerator.__eval_polynomial(polynomial, lst_features_out_of_range)
 
-        noise_sample = self.__rng.normal(loc=0, scale=noise, size=n_samples)
-        noise_sample_out_of_range = self.__rng.normal(loc=0, scale=noise, size=len(evaluations_out_of_range))
+        noise_sample = self.__rng.normal(loc=0, scale=self.__noise_factor, size=self.__sample_size)
+        noise_sample_out_of_range = self.__rng.normal(loc=0, scale=self.__noise_factor,
+                                                      size=len(evaluations_out_of_range))
 
         evaluations = evaluations + noise_sample
         evaluations_out_of_range = evaluations_out_of_range + noise_sample_out_of_range
