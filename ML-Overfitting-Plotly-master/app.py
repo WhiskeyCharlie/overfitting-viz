@@ -8,10 +8,12 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PolynomialFeatures
 
 from dataset_generation import DatasetGenerator
-from general_utils import format_yhat
+from general_utils import format_yhat, get_y_limits
 from layout import add_layout_to_app, EXTERNAL_CSS
 
 RANDOM_STATE = 718
+TESTING_DATA_PROPORTION = 0.2
+
 
 app = dash.Dash(__name__, external_stylesheets=EXTERNAL_CSS)
 server = app.server
@@ -45,7 +47,7 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
     generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
     X, y, X_out_range, y_out_range = generator.make_dataset()
     X_train, X_test, y_train, y_test = train_test_split(X, y,
-                                                        test_size=int(X.shape[0] * 0.15),
+                                                        test_size=int(X.shape[0] * TESTING_DATA_PROPORTION),
                                                         random_state=split_random_state)
 
     X_range = np.linspace(min(X.min(), X_out_range.min()) - 0.5,
@@ -115,7 +117,7 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
 
     )
 
-    return go.Figure(data=data, layout=layout)
+    return go.Figure(data=data, layout=layout, layout_yaxis_range=get_y_limits(y, y_out_range))
 
 
 @app.callback(Output('graph-fitting-display', 'figure'),
@@ -138,7 +140,9 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_cl
     generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
     X, y, X_out_range, y_out_range = generator.make_dataset()
     X_train, X_test, y_train, y_test = \
-        train_test_split(X, y, test_size=int(X.shape[0] * 0.15), random_state=n_clicks or RANDOM_STATE)
+        train_test_split(X, y,
+                         test_size=int(X.shape[0] * TESTING_DATA_PROPORTION),
+                         random_state=n_clicks or RANDOM_STATE)
 
     train_errors = []
     test_errors = []
@@ -215,7 +219,7 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_cl
 # Running the server
 if __name__ == '__main__':
     # NOTE: do not set debug=True in the below function call if you intend to compile it! The executable will crash!
-    app.run_server(port=2522)
+    app.run_server(port=2522, dev_tools_silence_routes_logging=True)
 
 # TODO: Easy-to-use documentation for entire project
 # TODO: Commented code everywhere with good explanations IN PROGRESS
