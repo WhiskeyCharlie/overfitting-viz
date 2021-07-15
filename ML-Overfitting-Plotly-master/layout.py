@@ -1,3 +1,6 @@
+"""
+Everything needed to add the layout (structure) to the app
+"""
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
@@ -102,7 +105,8 @@ def add_layout_to_app(app) -> None:
                     html.Br(),
                     html.Br(),
                     html.Button('Resample Train/Test',
-                                id='resample-btn', style={'color': 'rgb(200, 200, 200)', 'width': '100%'}),
+                                id='resample-btn',
+                                style={'color': 'rgb(200, 200, 200)', 'width': '100%'}),
                     html.Br()
                 ]
             ),
