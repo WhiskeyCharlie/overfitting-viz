@@ -1,5 +1,4 @@
 import dash
-import dash_bootstrap_components as dbc
 
 import numpy as np
 import plotly.graph_objs as go
@@ -10,18 +9,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PolynomialFeatures
 from dataset_generation import DatasetGenerator
 from general_utils import format_yhat
-from layout import add_layout_to_app
+from layout import add_layout_to_app, EXTERNAL_CSS
 
 RANDOM_STATE = 718
 
-EXTERNAL_CSS = [
-    "https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css",
-    "https://fonts.googleapis.com/css?family=Open+Sans|Roboto",  # Fonts
-    "https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css",
-    # Base Stylesheet
-    "https://cdn.rawgit.com/xhlulu/9a6e89f418ee40d02b637a429a876aa9/raw/base-styles.css",
-    dbc.themes.BOOTSTRAP
-]
 
 app = dash.Dash(__name__, external_stylesheets=EXTERNAL_CSS)
 server = app.server

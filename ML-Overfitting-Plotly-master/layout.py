@@ -1,8 +1,18 @@
+import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 
 import dash_reusable_components as drc
 import tooltip_data as ttd
+
+EXTERNAL_CSS = [
+    "https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css",
+    "https://fonts.googleapis.com/css?family=Open+Sans|Roboto",  # Fonts
+    "https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css",
+    # Base Stylesheet
+    "https://cdn.rawgit.com/xhlulu/9a6e89f418ee40d02b637a429a876aa9/raw/base-styles.css",
+    dbc.themes.BOOTSTRAP
+]
 
 
 def add_layout_to_app(app) -> None:
