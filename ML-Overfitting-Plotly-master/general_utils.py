@@ -13,7 +13,7 @@ def format_yhat(model):
         else:
             sign = ' - '
         if order == 0:
-            coefficient_string += f'{coefficient}'
+            coefficient_string += f'{coefficient:.3f}'
         elif order == 1:
             coefficient_string += sign + f'{abs(coefficient):.3f}*x'
         else:
