@@ -72,7 +72,7 @@ def add_layout_to_app(app) -> None:
 
                     ),
                     html.Br(),
-                    drc.input_area(
+                    drc.named_input_area(
                         name="Noise Factor",
                         min=0,
                         value=0,
@@ -81,7 +81,7 @@ def add_layout_to_app(app) -> None:
                         style={'width': '100%'}
                     ),
                     html.Br(),
-                    drc.input_area(
+                    drc.named_input_area(
                         name="Dataset Sample Size",
                         min=10,
                         value=300,
