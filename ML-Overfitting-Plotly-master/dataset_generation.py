@@ -18,7 +18,8 @@ class DatasetGenerator:
         self.__sample_size = sample_size
         self.__noise_factor = noise_factor * 0.5  # TODO: make this scaling more sensible, possibly move to make_dataset
         self.__out_of_range_proportion = out_of_range_proportion
-        self.__n_out_of_range_samples = round(out_of_range_proportion * sample_size)
+        # Max with 2 to ensure at least 1 out-of-range point on either side of the function
+        self.__n_out_of_range_samples = max(2, round(out_of_range_proportion * sample_size))
         self.__regression_functions = self.__generate_list_of_regression_functions()
 
     def make_dataset(self) -> Tuple[np.array, np.array, np.array, np.array]:
