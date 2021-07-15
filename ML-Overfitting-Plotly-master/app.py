@@ -228,6 +228,3 @@ if __name__ == '__main__':
     # NOTE: do not set debug=True in the below function call if you intend to compile it!
     # The executable will crash!
     app.run_server(port=2522, dev_tools_silence_routes_logging=True)
-
-# TODO: Easy-to-use documentation for entire project
-# TODO: Commented code everywhere with good explanations IN PROGRESS
