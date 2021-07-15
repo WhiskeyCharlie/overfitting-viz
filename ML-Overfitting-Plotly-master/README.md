@@ -50,8 +50,8 @@ While this guide should get you up and running, it is important to understand th
 
 3. Install the requirements (Only required the first time you create the environment). Change directory (for example
    with the command `cd`) into `ML-Overfitting-Plotly-master` Run:
-
-`pip install -r requirements.txt`
+   
+   `pip install -r requirements.txt`
 
 This may take a while, as it downloads and installs numerous Python libraries.
 
