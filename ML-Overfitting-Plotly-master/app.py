@@ -28,8 +28,7 @@ add_layout_to_app(app)
                Input('slider-polynomial-degree', 'value'),
                Input('slider-dataset-noise', 'value'),
                Input('resample-btn', 'n_clicks')])
-def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
-                 split_random_state=RANDOM_STATE):
+def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
     """
     Function called any time the graph needs to be updated. We redraw the graph from scratch
     :param dataset: Name of the dataset to generate
@@ -37,7 +36,6 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
     :param degree: Degree of the polynomial to fit to the graph
     :param noise_factor: How much noise to add to the data (how much deviation from true function)
     :param n_clicks: How many times has the resample button been pressed
-    :param split_random_state: The random state under which to split data into training and test
     :return: The figure, essentially the main graph to display
     """
     generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
@@ -187,7 +185,8 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_cl
         name='OOR Testing MSE',
         opacity=0.7,
         marker=dict(color='yellow'),
-        line=dict(width=4)
+        line=dict(width=4),
+        visible='legendonly'  # This makes the out-or-range plot off by default, toggle in legend
     )
 
     # noinspection PyTypeChecker
