@@ -16,6 +16,7 @@ from layout import add_layout_to_app, EXTERNAL_CSS
 
 RANDOM_STATE = 718
 TESTING_DATA_PROPORTION = 0.2
+JITTER_EPSILON = 0.05  # How much to "perturb" the x values of plots, goal is to stop overlap
 
 app = dash.Dash(__name__, external_stylesheets=EXTERNAL_CSS)
 server = app.server
@@ -119,51 +120,67 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
               [Input('dropdown-dataset', 'value'),
                Input('slider-sample-size', 'value'),
                Input('slider-polynomial-degree', 'value'),
-               Input('slider-dataset-noise', 'value'),
-               Input('resample-btn', 'n_clicks')])
-def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_clicks=0):
+               Input('slider-dataset-noise', 'value')])
+def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor):
     """
     Function called any time the graph needs to be updated. We redraws the graph from scratch
     :param dataset: Name of the dataset to generate
     :param sample_size: How many points to generate
     :param chosen_degree: Degree of polynomial user fits to the dataset (draws vertical line)
     :param noise_factor: How much noise to add to data (deviation from the true function)
-    :param n_clicks: How many times has the resample button been pressed
     :return: The figure, essentially the main graph to display
     """
     max_degree_to_check = 10
+    num_resamples_to_do = 10
+
+    degrees = np.array(range(1, max_degree_to_check + 1))
+    error_data = {'train': [], 'test': [], 'out-of-range': []}
     generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
     X, y, X_out_range, y_out_range = generator.make_dataset()
-    X_train, X_test, y_train, y_test = \
-        train_test_split(X, y,
-                         test_size=int(X.shape[0] * TESTING_DATA_PROPORTION),
-                         random_state=n_clicks or RANDOM_STATE)
+    for i in range(num_resamples_to_do):
+        X_train, X_test, y_train, y_test = \
+            train_test_split(X, y,
+                             test_size=int(X.shape[0] * TESTING_DATA_PROPORTION))
+        train_errors = []
+        test_errors = []
+        out_of_range_test_errors = []
+        for deg in degrees:
+            poly = PolynomialFeatures(degree=deg, include_bias=False)
+            X_train_poly = poly.fit_transform(X_train)
+            X_test_poly = poly.transform(X_test)
+            X_test_out_of_range_poly = poly.transform(X_out_range)
 
-    train_errors = []
-    test_errors = []
-    out_of_range_test_errors = []
-    degrees = list(range(1, max_degree_to_check + 1))
-    for deg in degrees:
-        poly = PolynomialFeatures(degree=deg, include_bias=False)
-        X_train_poly = poly.fit_transform(X_train)
-        X_test_poly = poly.transform(X_test)
-        X_test_out_of_range_poly = poly.transform(X_out_range)
+            model = LinearRegression()
 
-        model = LinearRegression()
+            # Train model and predict
+            model.fit(X_train_poly, y_train)
+            train_error = mean_squared_error(y_train, model.predict(X_train_poly))
+            test_error = mean_squared_error(y_test, model.predict(X_test_poly))
+            out_of_range_test_error = \
+                mean_squared_error(y_out_range, model.predict(X_test_out_of_range_poly))
+            train_errors.append(train_error)
+            test_errors.append(test_error)
+            out_of_range_test_errors.append(out_of_range_test_error)
+        error_data['train'].append(train_errors)
+        error_data['test'].append(test_errors)
+        error_data['out-of-range'].append(out_of_range_test_errors)
 
-        # Train model and predict
-        model.fit(X_train_poly, y_train)
-        train_error = mean_squared_error(y_train, model.predict(X_train_poly))
-        test_error = mean_squared_error(y_test, model.predict(X_test_poly))
-        out_of_range_test_error = \
-            mean_squared_error(y_out_range, model.predict(X_test_out_of_range_poly))
-        train_errors.append(train_error)
-        test_errors.append(test_error)
-        out_of_range_test_errors.append(out_of_range_test_error)
+    mean_train_errors = np.mean(error_data['train'], axis=0)
+    mean_test_errors = np.mean(error_data['test'], axis=0)
+    mean_out_of_range_errors = np.mean(error_data['out-of-range'], axis=0)
+
+    std_train_errors = np.std(error_data['train'], axis=0)
+    std_test_errors = np.std(error_data['test'], axis=0)
+    std_out_of_range_errors = np.std(error_data['out-of-range'], axis=0)
 
     trace_train = go.Scatter(
-        x=degrees,
-        y=train_errors,
+        x=degrees - JITTER_EPSILON,
+        y=mean_train_errors,
+        error_y=dict(
+            type='data',
+            array=std_train_errors,
+            visible=True
+        ),
         name='Training MSE',
         opacity=0.7,
         marker=dict(color='blue'),
@@ -171,8 +188,13 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_cl
     )
 
     trace_test = go.Scatter(
-        x=degrees,
-        y=test_errors,
+        x=degrees + JITTER_EPSILON,
+        y=mean_test_errors,
+        error_y=dict(
+            type='data',
+            array=std_test_errors,
+            visible=True
+        ),
         name='Testing MSE',
         opacity=0.7,
         marker=dict(color='red'),
@@ -181,7 +203,12 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_cl
 
     trace_test_out_of_range = go.Scatter(
         x=degrees,
-        y=out_of_range_test_errors,
+        y=mean_out_of_range_errors,
+        error_y=dict(
+            type='data',
+            array=std_out_of_range_errors,
+            visible=True
+        ),
         name='OOR Testing MSE',
         opacity=0.7,
         marker=dict(color='yellow'),
