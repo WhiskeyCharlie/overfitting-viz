@@ -16,9 +16,8 @@ class DatasetGenerator:
     def __init__(self, name: str, sample_size: int, noise_factor: float,
                  out_of_range_proportion=0.025, random_state=None):
         self.__name = name
-        self.__random_state = random_state
         # Random number generator (rng) for all randomness
-        self.__rng = np.random.default_rng(self.__random_state)
+        self.__rng = np.random.default_rng(random_state)
         self.__sample_size = sample_size
         # Right now, 0.5 is arbitrary so let's fix this in future
         self.__noise_factor = noise_factor * 0.5
@@ -45,15 +44,11 @@ class DatasetGenerator:
         :return: X, y, X_out_of_range, y_out_of_range
         """
 
-        lst_features = [np.sort(self.__rng.uniform(-2, 2, size=self.__sample_size))]
+        lst_features = np.sort(self.__rng.uniform(-2, 2, size=self.__sample_size)).reshape(-1, 1)
         samples_per_side = self.__n_out_of_range_samples // 2
         lower_half = np.sort(self.__rng.uniform(-2.25, -2, size=samples_per_side))
         upper_half = np.sort(self.__rng.uniform(2, 2.25, size=samples_per_side))
-        lst_features_out_of_range = [np.concatenate((lower_half, upper_half))]
-
-        lst_features = np.array(lst_features).T
-
-        lst_features_out_of_range = np.array(lst_features_out_of_range).T
+        lst_features_out_of_range = np.concatenate((lower_half, upper_half)).reshape(-1, 1)
 
         evaluations = DatasetGenerator.__eval_polynomial(polynomial, lst_features)
         evaluations_out_of_range = DatasetGenerator.__eval_polynomial(polynomial,
