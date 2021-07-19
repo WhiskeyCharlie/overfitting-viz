@@ -17,7 +17,6 @@ from layout import add_layout_to_app, EXTERNAL_CSS
 RANDOM_STATE = 718
 TESTING_DATA_PROPORTION = 0.2
 
-
 app = dash.Dash(__name__, external_stylesheets=EXTERNAL_CSS)
 server = app.server
 add_layout_to_app(app)
@@ -41,19 +40,12 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0,
     :param split_random_state: The random state under which to split data into training and test
     :return: The figure, essentially the main graph to display
     """
-    ctx = dash.callback_context
-    if ctx.triggered:
-        button_is_event = ctx.triggered[0]['prop_id'].split('.')[0] == 'resample-btn'
-        if button_is_event:
-            # This hack takes RANDOM_STATE if n_clicks is 0, else n_clicks
-            np.random.seed(n_clicks or RANDOM_STATE)
-            split_random_state = np.random.randint(100)
     generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
     X, y, X_out_range, y_out_range = generator.make_dataset()
     X_train, X_test, y_train, y_test = \
         train_test_split(X, y,
                          test_size=int(X.shape[0] * TESTING_DATA_PROPORTION),
-                         random_state=split_random_state)
+                         random_state=n_clicks or RANDOM_STATE)
 
     X_range = np.linspace(min(X.min(), X_out_range.min()) - 0.5,
                           max(X.max(), X_out_range.max()) + 0.5, sample_size).reshape(-1, 1)

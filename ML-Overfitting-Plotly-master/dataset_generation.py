@@ -29,8 +29,7 @@ class DatasetGenerator:
 
     def make_dataset(self) -> Tuple[np.array, np.array, np.array, np.array]:
         """
-        Create and return a new dataset,
-        possibly setting the numpy seed to be the seed passed at construction
+        Create and return a new dataset
         :return: X, y, X_out_of_range, y_out_of_range
         """
 
@@ -76,8 +75,8 @@ class DatasetGenerator:
         :param number_of_functions: How many functions should we generate (In general don't modify)
         :return: list of numpy Polynomials ranging from degree 1 to number_of_functions (inclusive)
         """
-        return [np.polynomial.Polynomial(self.__rng.uniform(-1, 1, size=i)) for i in
-                range(1, number_of_functions + 1)]
+        return [np.polynomial.Polynomial(self.__rng.uniform(-1, 1, size=i+1)) for i in
+                range(0, number_of_functions)]
 
     @staticmethod
     def __eval_polynomial(polynomial: np.polynomial.Polynomial, values: np.array) -> np.array:
