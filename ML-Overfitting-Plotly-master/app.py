@@ -244,4 +244,4 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor):
 if __name__ == '__main__':
     # NOTE: do not set debug=True in the below function call if you intend to compile it!
     # The executable will crash!
-    app.run_server(port=2522, dev_tools_silence_routes_logging=True)
+    app.run_server(host='0.0.0.0', port=2522, dev_tools_silence_routes_logging=True)
