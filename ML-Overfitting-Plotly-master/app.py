@@ -121,10 +121,12 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
               [Input('dropdown-dataset', 'value'),
                Input('slider-sample-size', 'value'),
                Input('slider-polynomial-degree', 'value'),
-               Input('slider-dataset-noise', 'value')])
-def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor):
+               Input('slider-dataset-noise', 'value'),
+               Input('resample-btn', 'n_clicks')])
+def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_clicks):
     """
     Function called any time the graph needs to be updated. We redraws the graph from scratch
+    :param n_clicks: This may seem unused, but don't remove it or else resampling points breaks :)
     :param dataset: Name of the dataset to generate
     :param sample_size: How many points to generate
     :param chosen_degree: Degree of polynomial user fits to the dataset (draws vertical line)
