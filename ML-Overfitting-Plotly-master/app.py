@@ -217,10 +217,10 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor):
 
     # noinspection PyTypeChecker
     layout = go.Layout(
-        title='',
+        title='MSE Behavior vs. Polynomial Degree',
         legend=dict(orientation='h',
-                    yanchor="top",
-                    y=0.99,
+                    yanchor="bottom",
+                    y=1.01,
                     xanchor="left",
                     x=0.01),
         margin=dict(l=25, r=25),
