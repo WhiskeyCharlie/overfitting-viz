@@ -17,6 +17,7 @@ from layout import add_layout_to_app, EXTERNAL_CSS
 RANDOM_STATE = 718
 TESTING_DATA_PROPORTION = 0.2
 JITTER_EPSILON = 0.05  # How much to "perturb" the x values of plots, goal is to stop overlap
+NUM_RESAMPLES_TO_DO = 10
 
 app = dash.Dash(__name__, external_stylesheets=EXTERNAL_CSS)
 server = app.server
@@ -131,16 +132,14 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor):
     :return: The figure, essentially the main graph to display
     """
     max_degree_to_check = 10
-    num_resamples_to_do = 10
 
     degrees = np.array(range(1, max_degree_to_check + 1))
     error_data = {'train': [], 'test': [], 'out-of-range': []}
     generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
     X, y, X_out_range, y_out_range = generator.make_dataset()
-    for i in range(num_resamples_to_do):
+    for _ in range(NUM_RESAMPLES_TO_DO):
         X_train, X_test, y_train, y_test = \
-            train_test_split(X, y,
-                             test_size=int(X.shape[0] * TESTING_DATA_PROPORTION))
+            train_test_split(X, y, test_size=int(X.shape[0] * TESTING_DATA_PROPORTION))
         train_errors = []
         test_errors = []
         out_of_range_test_errors = []
