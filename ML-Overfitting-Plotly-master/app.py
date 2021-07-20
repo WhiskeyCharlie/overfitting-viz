@@ -127,7 +127,7 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
                Input('slider-polynomial-degree', 'value'),
                Input('slider-dataset-noise', 'value'),
                Input('resample-btn', 'n_clicks')])
-def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_clicks):
+def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_clicks=0):
     """
     Function called any time the graph needs to be updated. We redraws the graph from scratch
     :param n_clicks: This may seem unused, but don't remove it or else resampling points breaks :)
@@ -145,9 +145,10 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_cl
     error_data = {'train': [], 'test': [], 'out-of-range': []}
     generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
     X, y, X_out_range, y_out_range = generator.make_dataset()
-    for _ in range(NUM_RESAMPLES_TO_DO):
+    for i in range(NUM_RESAMPLES_TO_DO):
         X_train, X_test, y_train, y_test = \
-            train_test_split(X, y, test_size=int(X.shape[0] * TESTING_DATA_PROPORTION))
+            train_test_split(X, y, test_size=int(X.shape[0] * TESTING_DATA_PROPORTION),
+                             random_state=i+1)
         train_errors = []
         test_errors = []
         out_of_range_test_errors = []
