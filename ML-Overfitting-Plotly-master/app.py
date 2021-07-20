@@ -5,6 +5,7 @@ import dash
 import numpy as np
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output
+from dash.exceptions import PreventUpdate
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
@@ -18,6 +19,7 @@ RANDOM_STATE = 718
 TESTING_DATA_PROPORTION = 0.2
 JITTER_EPSILON = 0.05  # How much to "perturb" the x values of plots, goal is to stop overlap
 NUM_RESAMPLES_TO_DO = 10
+MIN_SAMPLE_SIZE = DatasetGenerator.min_sample_size
 
 app = dash.Dash(__name__, external_stylesheets=EXTERNAL_CSS)
 server = app.server
@@ -40,6 +42,8 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
     :param n_clicks: How many times has the resample button been pressed
     :return: The figure, essentially the main graph to display
     """
+    if sample_size is None or sample_size < MIN_SAMPLE_SIZE:
+        raise PreventUpdate
     generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
     X, y, X_out_range, y_out_range = generator.make_dataset()
     X_train, X_test, y_train, y_test = \
@@ -133,6 +137,8 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_cl
     :param noise_factor: How much noise to add to data (deviation from the true function)
     :return: The figure, essentially the main graph to display
     """
+    if sample_size is None or sample_size < MIN_SAMPLE_SIZE:
+        raise PreventUpdate
     max_degree_to_check = 10
 
     degrees = np.array(range(1, max_degree_to_check + 1))

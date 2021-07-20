@@ -12,18 +12,21 @@ class DatasetGenerator:
     generating either fixed datasets or random datasets respectively, given the parameters.
     """
     dataset_name_to_degree = {f'degree_{i}': i for i in range(0, 11)}
+    min_sample_size = 10
 
     def __init__(self, name: str, sample_size: int, noise_factor: float,
                  out_of_range_proportion=0.025, random_state=None):
         self.__name = name
         # Random number generator (rng) for all randomness
         self.__rng = np.random.default_rng(random_state)
-        self.__sample_size = sample_size
+        # The below or ensures that if the frontend passes None as sample_size, we don't crash
+        self.__sample_size = sample_size or self.min_sample_size
         # Right now, 0.5 is arbitrary so let's fix this in future
         self.__noise_factor = noise_factor * 0.5
         self.__out_of_range_proportion = out_of_range_proportion
         # Max with 2 to ensure at least 1 out-of-range point on either side of the function
-        self.__n_out_of_range_samples = max(2, round(self.__out_of_range_proportion * sample_size))
+        self.__n_out_of_range_samples = max(2, round(self.__out_of_range_proportion *
+                                                     self.__sample_size))
         self.__regression_functions = self.__generate_list_of_regression_functions()
 
     def make_dataset(self) -> Tuple[np.array, np.array, np.array, np.array]:
