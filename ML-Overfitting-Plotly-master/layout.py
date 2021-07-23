@@ -16,6 +16,7 @@ EXTERNAL_CSS = [
     "https://cdn.rawgit.com/xhlulu/9a6e89f418ee40d02b637a429a876aa9/raw/base-styles.css",
     dbc.themes.BOOTSTRAP
 ]
+MIN_NUM_POINTS_SLIDER, DEFAULT_NUM_POINTS_SLIDER = 10, 30
 
 
 def add_layout_to_app(app) -> None:
@@ -86,8 +87,8 @@ def add_layout_to_app(app) -> None:
                     html.Br(),
                     drc.named_input_area(
                         name="Dataset Sample Size",
-                        min=10,
-                        value=300,
+                        min=MIN_NUM_POINTS_SLIDER,
+                        value=DEFAULT_NUM_POINTS_SLIDER,
                         id="slider-sample-size",
                         type='number',
                         style={'width': '100%'}

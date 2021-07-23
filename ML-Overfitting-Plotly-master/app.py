@@ -75,7 +75,7 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
         name='Training Data',
         mode='markers',
         opacity=0.7,
-        marker=dict(size=8)
+        marker=dict(size=12)
     )
     trace_test_in_range = go.Scatter(
         x=X_test.squeeze(),
@@ -83,7 +83,7 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
         name='Test Data',
         mode='markers',
         opacity=0.7,
-        marker=dict(size=8)
+        marker=dict(size=12)
     )
 
     trace_test_out_range = go.Scatter(
@@ -92,7 +92,7 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
         name='Out Of Range Test Data',
         mode='markers',
         opacity=0.7,
-        marker=dict(size=8, color='yellow')
+        marker=dict(size=12, color='yellow')
     )
 
     trace_prediction = go.Scatter(
@@ -125,9 +125,8 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
               [Input('dropdown-dataset', 'value'),
                Input('slider-sample-size', 'value'),
                Input('slider-polynomial-degree', 'value'),
-               Input('slider-dataset-noise', 'value'),
-               Input('resample-btn', 'n_clicks')])
-def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_clicks=0):
+               Input('slider-dataset-noise', 'value')])
+def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor):
     """
     Function called any time the graph needs to be updated. We redraws the graph from scratch
     :param n_clicks: This may seem unused, but don't remove it or else resampling points breaks :)
@@ -144,8 +143,9 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, n_cl
     degrees = np.array(range(1, max_degree_to_check + 1))
     error_data = {'train': [], 'test': [], 'out-of-range': []}
     generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
-    X, y, X_out_range, y_out_range = generator.make_dataset()
+
     for i in range(NUM_RESAMPLES_TO_DO):
+        X, y, X_out_range, y_out_range = generator.make_dataset()
         X_train, X_test, y_train, y_test = \
             train_test_split(X, y, test_size=int(X.shape[0] * TESTING_DATA_PROPORTION),
                              random_state=i+1)
