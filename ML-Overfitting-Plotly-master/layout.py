@@ -145,7 +145,7 @@ def add_layout_to_app(app) -> None:
                         id='graph-fitting-display',
                         className='row',
                         style={
-                            'height': 'calc(50vh - 160px)',
+                            'height': 'calc(100vh - 160px)',
                         },
                         figure=dict(
                             layout=dict(

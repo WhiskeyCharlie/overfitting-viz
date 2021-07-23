@@ -54,3 +54,18 @@ def format_yhat(model):
             coefficient_string += sign + f'{abs(coefficient):.3f}*x^{order}'
 
     return coefficient_string
+
+
+def form_error_bars_from_x_y(x_array: np.array, y_array: np.array, std_array: np.array) -> \
+        Tuple[np.array, np.array]:
+    """
+    Creates the x and y values for the continuous error bars around lines.
+    Lines will not go below zero.
+    :param x_array: values along x-axis
+    :param y_array: heights above x-axis
+    :param std_array: standard deviation of each point.
+    :return: x_values, y_values compliant with continuous error bar generation for go.Scatter
+    """
+    x_values = np.concatenate((x_array, x_array[::-1]))
+    y_values = np.concatenate((y_array + std_array, np.clip((y_array - std_array)[::-1], 0, None)))
+    return x_values, y_values

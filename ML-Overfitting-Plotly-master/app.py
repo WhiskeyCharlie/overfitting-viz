@@ -12,7 +12,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PolynomialFeatures
 
 from dataset_generation import DatasetGenerator
-from general_utils import format_yhat, get_y_limits
+from general_utils import format_yhat, get_y_limits, form_error_bars_from_x_y
 from layout import add_layout_to_app, EXTERNAL_CSS
 
 RANDOM_STATE = 718
@@ -182,56 +182,90 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor):
     std_out_of_range_errors = np.std(error_data['out-of-range'], axis=0)
 
     trace_train = go.Scatter(
-        x=degrees - JITTER_EPSILON,
+        x=degrees,
         y=mean_train_errors,
-        error_y=dict(
-            type='data',
-            array=std_train_errors,
-            visible=True
-        ),
-        name='Training MSE',
+        name='MSE',
+        legendgroup='Train',
+        legendgrouptitle=dict(text='Training', font=dict(color='black')),
         opacity=0.7,
         marker=dict(color='blue'),
         line=dict(width=4)
+    )
+    train_error_x, train_error_y = form_error_bars_from_x_y(degrees, mean_train_errors,
+                                                            std_train_errors)
+    trace_train_error = go.Scatter(
+        x=train_error_x,
+        y=train_error_y,
+        name='1 std',
+        legendgroup='Train',
+        fill='toself',
+        fillcolor='blue',
+        opacity=0.2,
+        line=dict(color='rgba(255,255,255,0)'),
+        hoverinfo='skip'
     )
 
     trace_test = go.Scatter(
         x=degrees + JITTER_EPSILON,
         y=mean_test_errors,
-        error_y=dict(
-            type='data',
-            array=std_test_errors,
-            visible=True
-        ),
-        name='Testing MSE',
+        name='MSE',
+        legendgroup='Test',
+        legendgrouptitle=dict(text='Testing', font=dict(color='black')),
         opacity=0.7,
         marker=dict(color='red'),
         line=dict(width=4)
     )
-
+    test_error_x, test_error_y = form_error_bars_from_x_y(degrees, mean_test_errors,
+                                                          std_test_errors)
+    trace_test_error = go.Scatter(
+        x=test_error_x,
+        y=test_error_y,
+        name='1 std',
+        legendgroup='Test',
+        fill='toself',
+        fillcolor='red',
+        opacity=0.2,
+        line=dict(color='rgba(255,255,255,0)'),
+        hoverinfo='skip'
+    )
     trace_test_out_of_range = go.Scatter(
         x=degrees,
         y=mean_out_of_range_errors,
-        error_y=dict(
-            type='data',
-            array=std_out_of_range_errors,
-            visible=True
-        ),
-        name='OOR Testing MSE',
+        name='OOR Test',
+        legendgroup='Test OOR',
+        legendgrouptitle=dict(text='Testing OOR', font=dict(color='black')),
         opacity=0.7,
         marker=dict(color='yellow'),
         line=dict(width=4),
         visible='legendonly'  # This makes the out-or-range plot off by default, toggle in legend
     )
 
+    test_oor_error_x, test_oor_error_y = form_error_bars_from_x_y(degrees,
+                                                                  mean_out_of_range_errors,
+                                                                  std_out_of_range_errors)
+    trace_test_out_of_range_error = go.Scatter(
+        x=test_oor_error_x,
+        y=test_oor_error_y,
+        name='OOR Test 1 std',
+        legendgroup='Test OOR',
+        fill='toself',
+        fillcolor='yellow',
+        opacity=0.2,
+        line=dict(color='rgba(255,255,255,0)'),
+        hoverinfo='skip',
+        visible='legendonly'
+    )
+
     # noinspection PyTypeChecker
     layout = go.Layout(
         title='MSE Behavior vs. Polynomial Degree',
-        legend=dict(orientation='h',
-                    yanchor="bottom",
-                    y=1.01,
+        legend=dict(orientation='v',
+                    yanchor="top",
+                    y=-0.3,
                     xanchor="left",
-                    x=0.01),
+                    x=0.01,
+                    bgcolor='#cbd3f2',
+                    font=dict(color='black')),
         margin=dict(l=25, r=25),
         hovermode='closest',
         plot_bgcolor="#cbd3f2",
@@ -241,11 +275,12 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor):
         xaxis_title='Polynomial Degree',
         yaxis_title='Mean Squared Error'
     )
-    fig = go.Figure(data=[trace_train, trace_test, trace_test_out_of_range], layout=layout)
+    fig = go.Figure(data=[trace_train, trace_train_error, trace_test, trace_test_error,
+                          trace_test_out_of_range, trace_test_out_of_range_error], layout=layout)
     fig.add_vline(x=chosen_degree, line_width=3, line_color='#27ab22',
-                  annotation=dict(text='Current Degree', textangle=-90,
+                  annotation=dict(text='Chosen Degree', textangle=-90,
                                   font=dict(color='rgb(0, 0, 0)'),
-                                  yshift=-100))
+                                  yshift=-50))
     return fig
 
 
