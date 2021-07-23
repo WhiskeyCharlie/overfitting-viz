@@ -17,7 +17,6 @@ from layout import add_layout_to_app, EXTERNAL_CSS
 
 RANDOM_STATE = 718
 TESTING_DATA_PROPORTION = 0.2
-JITTER_EPSILON = 0.05  # How much to "perturb" the x values of plots, goal is to stop overlap
 NUM_RESAMPLES_TO_DO = 10
 MIN_SAMPLE_SIZE = DatasetGenerator.min_sample_size
 
@@ -129,7 +128,6 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
 def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor):
     """
     Function called any time the graph needs to be updated. We redraws the graph from scratch
-    :param n_clicks: This may seem unused, but don't remove it or else resampling points breaks :)
     :param dataset: Name of the dataset to generate
     :param sample_size: How many points to generate
     :param chosen_degree: Degree of polynomial user fits to the dataset (draws vertical line)
@@ -206,7 +204,7 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor):
     )
 
     trace_test = go.Scatter(
-        x=degrees + JITTER_EPSILON,
+        x=degrees,
         y=mean_test_errors,
         name='MSE',
         legendgroup='Test',
