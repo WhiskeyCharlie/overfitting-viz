@@ -44,32 +44,35 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
     if None in [sample_size, noise_factor] or sample_size < MIN_SAMPLE_SIZE:
         raise PreventUpdate
     generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
-    X, y, X_out_range, y_out_range = generator.make_dataset().introduce_noise().get_dataset()
-    X_train, X_test, y_train, y_test = \
-        train_test_split(X, y,
-                         test_size=int(X.shape[0] * TESTING_DATA_PROPORTION),
+    x_values, y_values, x_values_out_of_range, y_values_out_range = \
+        generator.make_dataset().introduce_noise().get_dataset()
+    x_train, x_test, y_train, y_test = \
+        train_test_split(x_values, y_values,
+                         test_size=int(x_values.shape[0] * TESTING_DATA_PROPORTION),
                          random_state=n_clicks or RANDOM_STATE)
 
-    X_range = np.linspace(min(X.min(), X_out_range.min()) - 0.5,
-                          max(X.max(), X_out_range.max()) + 0.5, sample_size).reshape(-1, 1)
+    x_range = np.linspace(min(x_values.min(),
+                              x_values_out_of_range.min()) - 0.5,
+                          max(x_values.max(), x_values_out_of_range.max()) + 0.5,
+                          sample_size).reshape(-1, 1)
 
     # Create Polynomial Features so that linear regression is actually polynomial regression
     poly = PolynomialFeatures(degree=degree, include_bias=False)
-    X_train_poly = poly.fit_transform(X_train)
-    X_test_poly = poly.transform(X_test)
-    poly_range = poly.fit_transform(X_range)
+    x_train_poly = poly.fit_transform(x_train)
+    x_test_poly = poly.transform(x_test)
+    poly_range = poly.fit_transform(x_range)
 
     model = LinearRegression()
 
     # Train model and predict
-    model.fit(X_train_poly, y_train)
+    model.fit(x_train_poly, y_train)
     y_pred_range = model.predict(poly_range)
-    train_error = mean_squared_error(y_train, model.predict(X_train_poly))
-    test_error = mean_squared_error(y_test, model.predict(X_test_poly))
+    train_error = mean_squared_error(y_train, model.predict(x_train_poly))
+    test_error = mean_squared_error(y_test, model.predict(x_test_poly))
 
     # Create figure
     trace_train_in_range = go.Scatter(
-        x=X_train.squeeze(),
+        x=x_train.squeeze(),
         y=y_train,
         name='Training Data',
         mode='markers',
@@ -77,7 +80,7 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
         marker=dict(size=12)
     )
     trace_test_in_range = go.Scatter(
-        x=X_test.squeeze(),
+        x=x_test.squeeze(),
         y=y_test,
         name='Test Data',
         mode='markers',
@@ -86,8 +89,8 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
     )
 
     trace_test_out_range = go.Scatter(
-        x=X_out_range.squeeze(),
-        y=y_out_range,
+        x=x_values_out_of_range.squeeze(),
+        y=y_values_out_range,
         name='Out Of Range Test Data',
         mode='markers',
         opacity=0.7,
@@ -95,7 +98,7 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
     )
 
     trace_prediction = go.Scatter(
-        x=X_range.squeeze(),
+        x=x_range.squeeze(),
         y=y_pred_range,
         name='Prediction',
         mode='lines',
@@ -117,7 +120,8 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
 
     )
 
-    return go.Figure(data=data, layout=layout, layout_yaxis_range=get_y_limits(y, y_out_range))
+    return go.Figure(data=data, layout=layout,
+                     layout_yaxis_range=get_y_limits(y_values, y_values_out_range))
 
 
 @app.callback(Output('graph-fitting-display', 'figure'),
@@ -143,27 +147,29 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor):
     generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
 
     for i in range(NUM_RESAMPLES_TO_DO):
-        X, y, X_out_range, y_out_range = generator.make_dataset().introduce_noise().get_dataset()
-        X_train, X_test, y_train, y_test = \
-            train_test_split(X, y, test_size=int(X.shape[0] * TESTING_DATA_PROPORTION),
-                             random_state=i+1)
+        x_values, y_values, x_values_out_range, y_out_range = \
+            generator.make_dataset().introduce_noise().get_dataset()
+        x_train, x_test, y_train, y_test = \
+            train_test_split(x_values, y_values,
+                             test_size=int(x_values.shape[0] * TESTING_DATA_PROPORTION),
+                             random_state=i + 1)
         train_errors = []
         test_errors = []
         out_of_range_test_errors = []
         for deg in degrees:
             poly = PolynomialFeatures(degree=deg, include_bias=False)
-            X_train_poly = poly.fit_transform(X_train)
-            X_test_poly = poly.transform(X_test)
-            X_test_out_of_range_poly = poly.transform(X_out_range)
+            x_train_poly = poly.fit_transform(x_train)
+            x_test_poly = poly.transform(x_test)
+            x_test_out_of_range_poly = poly.transform(x_values_out_range)
 
             model = LinearRegression()
 
             # Train model and predict
-            model.fit(X_train_poly, y_train)
-            train_error = mean_squared_error(y_train, model.predict(X_train_poly))
-            test_error = mean_squared_error(y_test, model.predict(X_test_poly))
+            model.fit(x_train_poly, y_train)
+            train_error = mean_squared_error(y_train, model.predict(x_train_poly))
+            test_error = mean_squared_error(y_test, model.predict(x_test_poly))
             out_of_range_test_error = \
-                mean_squared_error(y_out_range, model.predict(X_test_out_of_range_poly))
+                mean_squared_error(y_out_range, model.predict(x_test_out_of_range_poly))
             train_errors.append(train_error)
             test_errors.append(test_error)
             out_of_range_test_errors.append(out_of_range_test_error)
