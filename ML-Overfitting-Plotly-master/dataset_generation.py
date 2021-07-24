@@ -28,21 +28,53 @@ class DatasetGenerator:
         self.__n_out_of_range_samples = max(2, round(self.__out_of_range_proportion *
                                                      self.__sample_size))
         self.__regression_functions = self.__generate_list_of_regression_functions()
+        self.__lst_features: np.array = None
+        self.__lst_features_out_of_range: np.array = None
+        self.__evaluations: np.array = None
+        self.__evaluations_out_of_range: np.array = None
+        self.__has_data = False
 
-    def make_dataset(self) -> Tuple[np.array, np.array, np.array, np.array]:
+    def make_dataset(self) -> 'DatasetGenerator':
         """
-        Create and return a new dataset
-        :return: X, y, X_out_of_range, y_out_of_range
+        Create and store internally a new dataset
+        :return: self to allow for chaining
         """
 
         ds_degree = DatasetGenerator.dataset_name_to_degree[self.__name]
         regression_func = self.__regression_functions[ds_degree]
-        return self.__generate_regression_data(regression_func)
+        self.__generate_regression_data(regression_func)
+        return self
+
+    def introduce_noise(self) -> 'DatasetGenerator':
+        """
+        Add noise to the data most recently created by this object.
+        Noise amount is determined both by the "noise_factor" parameter
+        passed at construction time, and the dataset itself.
+        :return: self for chaining
+        """
+        assert self.__has_data, 'make_dataset must be called before introduce_noise'
+
+        noise_sample = self.__rng.normal(loc=0, scale=self.__noise_factor, size=self.__sample_size)
+        size = len(self.__evaluations_out_of_range)
+        noise_sample_out_of_range = self.__rng.normal(loc=0, scale=self.__noise_factor, size=size)
+        self.__evaluations += noise_sample
+        self.__evaluations_out_of_range += noise_sample_out_of_range
+
+        return self
+
+    def get_dataset(self) -> Tuple[np.array, np.array, np.array, np.array]:
+        """
+        Get (a copy of) the dataset stored internally in this object.
+        :return: X, y (possibly with noise), X_out_of_range, y_out_of_range (possibly with noise)
+        """
+        assert self.__has_data, 'make_dataset must be called before get_dataset'
+        return np.copy(self.__lst_features), np.copy(self.__evaluations), \
+               np.copy(self.__lst_features_out_of_range), np.copy(self.__evaluations_out_of_range)
 
     def __generate_regression_data(self, polynomial: np.polynomial.Polynomial) -> \
             Tuple[np.array, np.array, np.array, np.array]:
         """
-        Generates the actual data for to fit including (possibly) noise
+        Generates the actual data for to fit WITHOUT ANY NOISE!
         :param polynomial: Polynomial to generate the data for
         :return: X, y, X_out_of_range, y_out_of_range
         """
@@ -57,12 +89,11 @@ class DatasetGenerator:
         evaluations_out_of_range = DatasetGenerator.__eval_polynomial(polynomial,
                                                                       lst_features_out_of_range)
 
-        noise_sample = self.__rng.normal(loc=0, scale=self.__noise_factor, size=self.__sample_size)
-        noise_sample_out_of_range = self.__rng.normal(loc=0, scale=self.__noise_factor,
-                                                      size=len(evaluations_out_of_range))
-
-        evaluations = evaluations + noise_sample
-        evaluations_out_of_range = evaluations_out_of_range + noise_sample_out_of_range
+        self.__lst_features = lst_features
+        self.__evaluations = evaluations
+        self.__lst_features_out_of_range = lst_features_out_of_range
+        self.__evaluations_out_of_range = evaluations_out_of_range
+        self.__has_data = True
 
         return lst_features, evaluations, lst_features_out_of_range, evaluations_out_of_range
 

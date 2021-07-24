@@ -41,10 +41,10 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
     :param n_clicks: How many times has the resample button been pressed
     :return: The figure, essentially the main graph to display
     """
-    if sample_size is None or sample_size < MIN_SAMPLE_SIZE:
+    if None in [sample_size, noise_factor] or sample_size < MIN_SAMPLE_SIZE:
         raise PreventUpdate
     generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
-    X, y, X_out_range, y_out_range = generator.make_dataset()
+    X, y, X_out_range, y_out_range = generator.make_dataset().introduce_noise().get_dataset()
     X_train, X_test, y_train, y_test = \
         train_test_split(X, y,
                          test_size=int(X.shape[0] * TESTING_DATA_PROPORTION),
@@ -134,7 +134,7 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor):
     :param noise_factor: How much noise to add to data (deviation from the true function)
     :return: The figure, essentially the main graph to display
     """
-    if sample_size is None or sample_size < MIN_SAMPLE_SIZE:
+    if None in [sample_size, noise_factor] or sample_size < MIN_SAMPLE_SIZE:
         raise PreventUpdate
     max_degree_to_check = 10
 
@@ -143,7 +143,7 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor):
     generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
 
     for i in range(NUM_RESAMPLES_TO_DO):
-        X, y, X_out_range, y_out_range = generator.make_dataset()
+        X, y, X_out_range, y_out_range = generator.make_dataset().introduce_noise().get_dataset()
         X_train, X_test, y_train, y_test = \
             train_test_split(X, y, test_size=int(X.shape[0] * TESTING_DATA_PROPORTION),
                              random_state=i+1)
