@@ -53,10 +53,12 @@ class DatasetGenerator:
         :return: self for chaining
         """
         assert self.__has_data, 'make_dataset must be called before introduce_noise'
-
-        noise_sample = self.__rng.normal(loc=0, scale=self.__noise_factor, size=self.__sample_size)
+        ds_degree = DatasetGenerator.dataset_name_to_degree[self.__name]
+        std_of_in_range_data = np.std(self.__evaluations) if ds_degree != 0 else 0.1
+        scale_of_noise = self.__noise_factor * std_of_in_range_data * 0.1
+        noise_sample = self.__rng.normal(loc=0, scale=scale_of_noise, size=self.__sample_size)
         size = len(self.__evaluations_out_of_range)
-        noise_sample_out_of_range = self.__rng.normal(loc=0, scale=self.__noise_factor, size=size)
+        noise_sample_out_of_range = self.__rng.normal(loc=0, scale=scale_of_noise, size=size)
         self.__evaluations += noise_sample
         self.__evaluations_out_of_range += noise_sample_out_of_range
 
