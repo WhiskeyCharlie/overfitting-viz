@@ -1,6 +1,8 @@
 """
 The main driver of the app
 """
+from pathlib import Path
+
 import dash
 import numpy as np
 import plotly.graph_objs as go
@@ -20,7 +22,7 @@ TESTING_DATA_PROPORTION = 0.2
 NUM_RESAMPLES_TO_DO = 10
 MIN_SAMPLE_SIZE = DatasetGenerator.min_sample_size
 
-app = dash.Dash(__name__, external_stylesheets=EXTERNAL_CSS)
+app = dash.Dash(__name__, external_stylesheets=EXTERNAL_CSS, assets_folder=str(Path(__file__).parent / 'assets'))
 server = app.server
 add_layout_to_app(app)
 
