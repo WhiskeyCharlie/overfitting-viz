@@ -4,3 +4,8 @@ venv/
 app.spec
 build/
 dist/
+
+# Default ignored files
+/.idea/workspace.xml
+/.idea/
+__pycache__

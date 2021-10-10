@@ -1,9 +1,9 @@
 FROM python:3.8-buster
 
 
-COPY ML-Overfitting-Plotly-master/assets /assets
+COPY assets /assets
 COPY ML-Overfitting-Plotly-master/*.py /
-COPY ML-Overfitting-Plotly-master/requirements.txt /
+COPY requirements.txt /
 
 
 RUN pip install -r requirements.txt

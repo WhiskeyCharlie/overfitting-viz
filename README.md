@@ -46,7 +46,8 @@ While this guide should get you up and running, it is important to understand th
 
 2. Activate the environment to begin using it. This step is platform specific. On Linux systems, the command should
    resemble
-   `source venv/bin/activate`. We recommend finding an up-to-date guide for your Operating System (Windows, Mac, etc.).
+   `source overfitting_venv/bin/activate`. We recommend finding an up-to-date guide for your Operating System (Windows, 
+   Mac, etc.).
 
 3. Install the requirements (Only required the first time you create the environment). Change directory (for example
    with the command `cd`) into `ML-Overfitting-Plotly-master` Run:
@@ -71,3 +72,16 @@ on this repository or email the author.
 2. Open a terminal and navigate to the folder mentioned in step 1.
 3. Run the executable as you would any other, on unix systems you can run `./app` where "app"
    is replaced by the name of the executable you downloaded.
+   You may need to change the permissions on the file to make it executable (e.g., `chmod +x app`).
+   You should find a guide for doing this on your operating system.
+
+## Running the App as a Docker Image
+### Prerequisites
+Some basic knowledge of Docker will be useful for this section.
+We assume you have installed Docker (this process differs from platform to platform).
+
+This approach will make editing the code less convenient, so it is recommended mostly as a quick way to play around
+with the program. Good for demos, etc.
+
+1. `docker pull TODO ADD IMAGE PATH`
+2. `docker run --rm -p 2522:2522 TODO ADD IMAGE NAME`
