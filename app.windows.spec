@@ -3,10 +3,10 @@
 
 block_cipher = None
 
-prefix = 'overfitting_venv/lib/python3.8/site-packages/'
+prefix = 'overfitting_venv/Lib/site-packages/'
 
 a = Analysis(['src/app.py'],
-             pathex=['../overfitting_venv/lib/python3.8/site-packages', '../Overfitting'],
+             pathex=['../overfitting_venv/Lib/site-packages', '../Overfitting'],
              binaries=[],
              datas=[
              ('assets', 'assets'),
@@ -32,9 +32,9 @@ exe = EXE(pyz,
           a.scripts,
           a.binaries,
           a.zipfiles,
-          a.datas,  
+          a.datas,
           [],
-          name='vizibly',
+          name='app',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
@@ -45,5 +45,4 @@ exe = EXE(pyz,
           disable_windowed_traceback=False,
           target_arch=None,
           codesign_identity=None,
-          entitlements_file=None,
-          icon='assets/aperture.ico')
+          entitlements_file=None)

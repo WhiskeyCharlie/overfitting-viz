@@ -1,6 +1,7 @@
 """
 The main driver of the app
 """
+import os
 import sys
 from pathlib import Path
 
@@ -22,10 +23,14 @@ RANDOM_STATE = 718
 TESTING_DATA_PROPORTION = 0.2
 NUM_RESAMPLES_TO_DO = 10
 MIN_SAMPLE_SIZE = DatasetGenerator.min_sample_size
+
 if getattr(sys, 'frozen', False):
     ASSETS_FOLDER = Path(getattr(sys, '_MEIPASS', '.')) / 'assets'
 else:
     ASSETS_FOLDER = str(Path(__file__).absolute().parent.parent / 'assets')
+
+IP_TO_LISTEN_ON = os.getenv('IP_TO_LISTEN_ON', '127.0.0.1')  # This helps work in various environments
+PORT = 2522
 
 app = dash.Dash(__name__, external_stylesheets=EXTERNAL_CSS, assets_folder=ASSETS_FOLDER)
 server = app.server
@@ -299,4 +304,4 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor):
 if __name__ == '__main__':
     # NOTE: do not set debug=True in the below function call if you intend to compile it!
     # The executable will crash!
-    app.run_server(host='0.0.0.0', port=2522, dev_tools_silence_routes_logging=True)
+    app.run_server(host=IP_TO_LISTEN_ON, port=PORT, dev_tools_silence_routes_logging=True)
