@@ -3,6 +3,7 @@
 
 block_cipher = None
 
+prefix = 'overfitting_venv/lib/python3.8/site-packages/'
 
 a = Analysis(['src/app.py'],
              pathex=['../overfitting_venv/lib/python3.8/site-packages', '../Overfitting'],
@@ -11,10 +12,10 @@ a = Analysis(['src/app.py'],
              ('assets', 'assets'),
              ('assets/base-styles.css', 'base-styles.css'),
              ('assets/custom-styles.css', 'custom-styles.css'),
-             ('overfitting_venv/lib/python3.8/site-packages/dash_core_components/', 'dash_core_components'),
-             ('overfitting_venv/lib/python3.8/site-packages/dash_html_components/', 'dash_html_components'),
-             ('overfitting_venv/lib/python3.8/site-packages/dash_bootstrap_components/', 'dash_bootstrap_components'),
-             ('overfitting_venv/lib/python3.8/site-packages/dash', 'dash/')
+             (prefix + 'dash_core_components/', 'dash_core_components'),
+             (prefix + 'dash_html_components/', 'dash_html_components'),
+             (prefix + 'dash_bootstrap_components/', 'dash_bootstrap_components'),
+             (prefix + 'dash', 'dash/')
              ],
              hiddenimports=['sklearn.utils._weight_vector'],
              hookspath=[],
