@@ -1,7 +1,6 @@
 *.zip
 venv/
 .idea/
-app.spec
 build/
 dist/
 
