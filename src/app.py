@@ -1,6 +1,7 @@
 """
 The main driver of the app
 """
+import sys
 from pathlib import Path
 
 import dash
@@ -21,7 +22,10 @@ RANDOM_STATE = 718
 TESTING_DATA_PROPORTION = 0.2
 NUM_RESAMPLES_TO_DO = 10
 MIN_SAMPLE_SIZE = DatasetGenerator.min_sample_size
-ASSETS_FOLDER = str(Path(__file__).absolute().parent.parent / 'assets')
+if getattr(sys, 'frozen', False):
+    ASSETS_FOLDER = Path(getattr(sys, '_MEIPASS', '.')) / 'assets'
+else:
+    ASSETS_FOLDER = str(Path(__file__).absolute().parent.parent / 'assets')
 
 app = dash.Dash(__name__, external_stylesheets=EXTERNAL_CSS, assets_folder=ASSETS_FOLDER)
 server = app.server
