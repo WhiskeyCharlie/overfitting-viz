@@ -21,8 +21,9 @@ RANDOM_STATE = 718
 TESTING_DATA_PROPORTION = 0.2
 NUM_RESAMPLES_TO_DO = 10
 MIN_SAMPLE_SIZE = DatasetGenerator.min_sample_size
+ASSETS_FOLDER = str(Path(__file__).absolute().parent.parent / 'assets')
 
-app = dash.Dash(__name__, external_stylesheets=EXTERNAL_CSS, assets_folder=str(Path(__file__).parent / 'assets'))
+app = dash.Dash(__name__, external_stylesheets=EXTERNAL_CSS, assets_folder=ASSETS_FOLDER)
 server = app.server
 add_layout_to_app(app)
 

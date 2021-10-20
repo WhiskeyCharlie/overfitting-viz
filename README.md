@@ -9,10 +9,9 @@ An interactive application that demonstrates overfitting in machine learning mod
 The **Dataset** dropdown lets you select among different datasets. Each dataset is identified by its degree; Degree 1 is
 a line, Degree 2 a parabola, etc.
 
-**Noise Factor** lets you add noise to the sampled data. The value is proportional to the standard deviation of the (
-Gaussian) noise introduced to the data.
+**Noise Factor** lets you add noise to the sampled data. The value is proportional to the standard deviation of the (Gaussian) noise introduced to the data.
 
-**Dataset Sample Size:** enables you to select the sample data size. Default is 300 data points, empirically the
+**Dataset Sample Size:** enables you to select the sample data size. Default is 30 data points, empirically the
 phenomenon of overfitting is easier to see with fewer points, somewhere in the neighborhood of 50 points should suffice.
 
 **Model Polynomial Degree:** enables you to control the polynomial degrees to fit your data. E.g., selecting 1 fits a
@@ -26,7 +25,6 @@ Notice also the graph on the right-hand side. This graph shows how the MSE (mean
 increased or decreased the degree of the polynomial fitting the data. The vertical green line marks the currently
 selected degree.
 
-[comment]: <> (TODO: Add an option for virtualenv and pip, maybe distribute as an executable?)
 
 ## Running the App From Source
 
@@ -40,26 +38,22 @@ While this guide should get you up and running, it is important to understand th
 
 1. Create a new virtual environment. This is an isolated environment to store all the dependencies, so as not to pollute
    your system with our specific libraries. We assume you are running this command in the terminal, but graphical
-   options exist within certain IDEs such as PyCharm. Run:
+   options exist within certain IDEs such as PyCharm.
 
-   `virtualenv overfitting_venv` from the directory containing the downloaded files.
+   Run: `virtualenv overfitting_venv` from the directory containing the downloaded files. (If you get an error to the effect of "virtualenv" not being found, you probably need to install it. Find a recent guide on installation for your operating system of choice) This command creates the environment that we will install our dependencies in.
 
-2. Activate the environment to begin using it. This step is platform specific. On Linux systems, the command should
+3. Activate the environment to begin using it. This step is platform specific. On Linux systems, the command should
    resemble
    `source overfitting_venv/bin/activate`. We recommend finding an up-to-date guide for your Operating System (Windows, 
    Mac, etc.).
 
-3. Install the requirements (Only required the first time you create the environment). Change directory (for example
-   with the command `cd`) into `ML-Overfitting-Plotly-master` Run:
-   
-   `pip install -r requirements.txt`
+4. Install the requirements (Only required the first time you create the environment) with the command `pip install -r requirements.txt`
 
-This may take a while, as it downloads and installs numerous Python libraries.
+   This may take a while, as it downloads and installs numerous Python libraries.
 
 4. Run the code.
 
-In your terminal, run `python app.py`. An IP address with a port will be printed, it could look like
-"http://127.0.0.1:2522/". Open this link in your web browser, and you should now see the app.
+   From the same terminal in which you activated the virtual environment (step 3), run `python app.py`. An IP address with a port will be printed, it could look like "http://127.0.0.1:2522/". Open this link in your web browser, and you should now see the app.
 
 ### Conda
 
@@ -83,5 +77,5 @@ We assume you have installed Docker (this process differs from platform to platf
 This approach will make editing the code less convenient, so it is recommended mostly as a quick way to play around
 with the program. Good for demos, etc.
 
-1. `docker pull TODO ADD IMAGE PATH`
-2. `docker run --rm -p 2522:2522 TODO ADD IMAGE NAME`
+1. `docker pull ghcr.io/whiskeycharlie/overfitting-viz:master`
+2. `docker run --rm -p 2522:2522 overfitting-viz:master`

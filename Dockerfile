@@ -3,7 +3,7 @@ FROM python:3.8-buster
 
 
 COPY src/*.py /app/
-COPY assets /app/assets
+COPY assets /assets
 COPY requirements.txt /
 
 
