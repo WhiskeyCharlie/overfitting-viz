@@ -30,8 +30,8 @@ jobs:
         id: deploy
         uses: google-github-actions/deploy-cloudrun@main
         with:
-          service: hello-cloud-run 
-          image: gcr.io/cloudrun/hello
+          service: jon-vizibly 
+          image: gcr.io/cloudrun/overfitting-viz
           credentials: ${{ secrets.GCP_SA_KEY }}
 
       - name: Use Output
