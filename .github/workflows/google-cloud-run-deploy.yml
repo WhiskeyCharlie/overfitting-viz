@@ -15,25 +15,33 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  deployment:
-    # The type of runner that the job will run on
+  deploy:
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v2
 
-      # Runs a single command using the runners shell
-      - name: Deploy to Cloud Run
-        id: deploy
-        uses: google-github-actions/deploy-cloudrun@main
-        with:
-          service: jon-vizibly 
-          image: ghcr.io/whiskeycharlie/overfitting-viz:master
-          credentials: ${{ secrets.GCP_SA_KEY }}
-          region: europe-west4
+    - name: Setup Cloud SDK
+      uses: google-github-actions/setup-gcloud@v0.2.0
+      with:
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        export_default_credentials: true  # Set to true to authenticate the Cloud Run action
 
-      - name: Use Output
-        run: curl "${{ steps.deploy.outputs.url }}"
+    - name: Authorize Docker push
+      run: gcloud auth configure-docker
+
+    - name: Build and Push Container
+      run: |-
+        docker build -t gcr.io/cloudrun/jon-vizibly:${{  github.sha }} .
+        docker push gcr.io/cloudrun/jon-vizibly:${{  github.sha }}
+        
+    - name: Deploy to Cloud Run
+      id: deploy
+      uses: google-github-actions/deploy-cloudrun@v0.4.0
+      with:
+        service: jon-vizibly
+        image: gcr.io/cloudrun/jon-vizibly:${{  github.sha }}
+        region: europe-west4
+
+    - name: Show Output
+      run: echo ${{ steps.deploy.outputs.url }}
