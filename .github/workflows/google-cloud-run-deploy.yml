@@ -33,6 +33,7 @@ jobs:
           service: jon-vizibly 
           image: gcr.io/cloudrun/overfitting-viz
           credentials: ${{ secrets.GCP_SA_KEY }}
+          region: europe-west4
 
       - name: Use Output
         run: curl "${{ steps.deploy.outputs.url }}"
