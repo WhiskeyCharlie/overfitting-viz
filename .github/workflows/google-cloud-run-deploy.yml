@@ -32,15 +32,15 @@ jobs:
 
     - name: Build and Push Container
       run: |-
-        docker build -t gcr.io/cloudrun/jon-vizibly:${{  github.sha }} .
-        docker push gcr.io/cloudrun/jon-vizibly:${{  github.sha }}
+        docker build -t gcr.io/root-arcanum-329915/overfitting-viz:${{  github.sha }} .
+        docker push gcr.io/root-arcanum-329915/overfitting-viz:${{  github.sha }}
         
     - name: Deploy to Cloud Run
       id: deploy
       uses: google-github-actions/deploy-cloudrun@v0.4.0
       with:
         service: jon-vizibly
-        image: gcr.io/cloudrun/jon-vizibly:${{  github.sha }}
+        image: gcr.io/root-arcanum-329915/overfitting-viz:${{  github.sha }}
         region: europe-west4
 
     - name: Show Output
