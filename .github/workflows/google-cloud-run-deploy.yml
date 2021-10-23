@@ -31,7 +31,7 @@ jobs:
         uses: google-github-actions/deploy-cloudrun@main
         with:
           service: jon-vizibly 
-          image: gcr.io/cloudrun/jon-vizibly
+          image: ghcr.io/whiskeycharlie/overfitting-viz:master
           credentials: ${{ secrets.GCP_SA_KEY }}
           region: europe-west4
 
