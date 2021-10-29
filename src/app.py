@@ -17,22 +17,25 @@ from sklearn.preprocessing import PolynomialFeatures
 
 from dataset_generation import DatasetGenerator
 from general_utils import format_yhat, get_y_limits, form_error_bars_from_x_y
-from layout import add_layout_to_app, EXTERNAL_CSS
+from layout import add_layout_to_app, EXTERNAL_CSS, APP_TITLE
 
 RANDOM_STATE = 718
 TESTING_DATA_PROPORTION = 0.2
 NUM_RESAMPLES_TO_DO = 10
 MIN_SAMPLE_SIZE = DatasetGenerator.min_sample_size
 
+# Check if the code is running "inside" an executable file
 if getattr(sys, 'frozen', False):
     ASSETS_FOLDER = Path(getattr(sys, '_MEIPASS', '.')) / 'assets'
 else:
     ASSETS_FOLDER = str(Path(__file__).absolute().parent.parent / 'assets')
 
-IP_TO_LISTEN_ON = os.getenv('IP_TO_LISTEN_ON', '127.0.0.1')  # This helps work in various environments
+# This helps work in various environments
+IP_TO_LISTEN_ON = os.getenv('IP_TO_LISTEN_ON', '127.0.0.1')
 PORT = 2522
 
-app = dash.Dash(__name__, external_stylesheets=EXTERNAL_CSS, assets_folder=ASSETS_FOLDER)
+app = dash.Dash(__name__, external_stylesheets=EXTERNAL_CSS, assets_folder=ASSETS_FOLDER,
+                title=APP_TITLE)
 server = app.server
 add_layout_to_app(app)
 

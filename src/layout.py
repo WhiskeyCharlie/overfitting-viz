@@ -17,6 +17,7 @@ EXTERNAL_CSS = [
     dbc.themes.BOOTSTRAP
 ]
 MIN_NUM_POINTS_SLIDER, DEFAULT_NUM_POINTS_SLIDER = 10, 30
+APP_TITLE = 'Vizibly'
 
 
 def add_layout_to_app(app) -> None:
@@ -31,7 +32,7 @@ def add_layout_to_app(app) -> None:
         html.Div(className="banner", children=[
             html.Div(className='container scalable', children=[
                 html.H2(html.A(
-                    'Overfitting Explorer',
+                    APP_TITLE,
                     style={'text-decoration': 'none', 'color': 'inherit'}
                 ))
             ]),
