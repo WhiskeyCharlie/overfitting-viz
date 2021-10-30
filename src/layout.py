@@ -16,8 +16,9 @@ EXTERNAL_CSS = [
     "https://cdn.rawgit.com/xhlulu/9a6e89f418ee40d02b637a429a876aa9/raw/base-styles.css",
     dbc.themes.BOOTSTRAP
 ]
-MIN_NUM_POINTS_SLIDER, DEFAULT_NUM_POINTS_SLIDER = 10, 30
+MIN_NUM_POINTS_SLIDER, DEFAULT_NUM_POINTS_SLIDER, MAX_NUM_POINTS_SLIDER = 10, 30, 300
 APP_TITLE = 'Vizibly'
+GITHUB_URL = 'https://github.com/WhiskeyCharlie/overfitting-viz'
 
 
 def add_layout_to_app(app) -> None:
@@ -65,7 +66,6 @@ def add_layout_to_app(app) -> None:
                             {'label': 'Dataset Degree 8', 'value': 'degree_8'},
                             {'label': 'Dataset Degree 9', 'value': 'degree_9'},
                             {'label': 'Dataset Degree 10', 'value': 'degree_10'},
-
                         ],
                         value='degree_1',
                         clearable=False,
@@ -90,6 +90,7 @@ def add_layout_to_app(app) -> None:
                         name="Dataset Sample Size",
                         min=MIN_NUM_POINTS_SLIDER,
                         value=DEFAULT_NUM_POINTS_SLIDER,
+                        max=MAX_NUM_POINTS_SLIDER,
                         id="slider-sample-size",
                         type='number',
                         style={'width': '100%'}
@@ -167,4 +168,23 @@ def add_layout_to_app(app) -> None:
         ]),
         drc.custom_tooltip(ttd.SLIDER_DATASET_NOISE, target='slider-dataset-noise'),
         drc.custom_tooltip(ttd.RESAMPLE_BUTTON, target='resample-btn'),
+        html.Center(
+            children=html.Footer(
+                id='footer',
+                children=[
+                    html.Div(
+                        children=[
+                            html.I(
+                                className='fa fa-github',
+                                style={'margin-right': '5px'}
+                            ),
+                            html.A(
+                                children='Get the code',
+                                href=GITHUB_URL
+                            )
+                        ]
+                    )
+                ]
+            )
+        )
     ])
