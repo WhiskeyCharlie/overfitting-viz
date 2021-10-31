@@ -41,14 +41,18 @@ add_layout_to_app(app)
 
 
 @app.callback(Output('graph-regression-display', 'figure'),
+              Output('session', 'data'),
               [Input('dropdown-dataset', 'value'),
                Input('slider-sample-size', 'value'),
                Input('slider-polynomial-degree', 'value'),
                Input('slider-dataset-noise', 'value'),
-               Input('resample-btn', 'n_clicks')])
-def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
+               Input('resample-btn', 'n_clicks'),
+               Input('session', 'data')]
+              )
+def update_graph(dataset, sample_size, degree, noise_factor, n_clicks, session):
     """
     Function called any time the graph needs to be updated. We redraw the graph from scratch
+    :param session: Dictionary stored client-side to keep track of randomness
     :param dataset: Name of the dataset to generate
     :param sample_size: How many points to generate
     :param degree: Degree of the polynomial to fit to the graph
@@ -56,9 +60,18 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
     :param n_clicks: How many times has the resample button been pressed
     :return: The figure, essentially the main graph to display
     """
+
     if None in [sample_size, noise_factor] or sample_size < MIN_SAMPLE_SIZE:
         raise PreventUpdate
-    generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
+    context = dash.callback_context
+    if session is None:
+        session = {'random-state': RANDOM_STATE}
+    # If we're updating because the dropdown-dataset was changed, select new randomness for the polynomials
+    if context.triggered and context.triggered[0]['prop_id'].split('.')[0] == 'dropdown-dataset':
+        session['random-state'] = np.random.randint(0, 1_000_000)
+
+    generator = DatasetGenerator(dataset, sample_size, noise_factor,
+                                 random_state=session.get('random-state', RANDOM_STATE))
     x_values, y_values, x_values_out_of_range, y_values_out_range = \
         generator.make_dataset().introduce_noise().get_dataset()
     x_train, x_test, y_train, y_test = \
@@ -122,10 +135,16 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
         line=dict(width=4)
     )
     data = [trace_train_in_range, trace_test_in_range, trace_test_out_range, trace_prediction]
+    rounded_train_error = round(train_error, 3)
+    rounded_test_error = round(test_error, 3)
 
+    if min(rounded_test_error, rounded_train_error) < 0.0001:
+        rounded_test_error = f'{test_error:.2e}'
+        rounded_train_error = f'{train_error:.2e}'
+    inequality_symbol = '>' if train_error > test_error else '<'
     layout = go.Layout(
-        title=f"MSE: {train_error:.3f} (Train Data) "
-              f"\n MSE: {test_error:.3f} (Test Data)",
+        title=f"MSE: {rounded_train_error} (Train Data) "
+              f"{inequality_symbol} MSE: {rounded_test_error} (Test Data)",
         legend=dict(orientation='h'),
         margin=dict(l=25, r=25),
         hovermode='closest',
@@ -136,17 +155,19 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
     )
 
     return go.Figure(data=data, layout=layout,
-                     layout_yaxis_range=get_y_limits(y_values, y_values_out_range))
+                     layout_yaxis_range=get_y_limits(y_values, y_values_out_range)), session
 
 
 @app.callback(Output('graph-fitting-display', 'figure'),
               [Input('dropdown-dataset', 'value'),
                Input('slider-sample-size', 'value'),
                Input('slider-polynomial-degree', 'value'),
-               Input('slider-dataset-noise', 'value')])
-def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor):
+               Input('slider-dataset-noise', 'value'),
+               Input('session', 'data')])
+def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, session):
     """
     Function called any time the graph needs to be updated. We redraws the graph from scratch
+    :param session: Dictionary stored client-side to keep track of randomness
     :param dataset: Name of the dataset to generate
     :param sample_size: How many points to generate
     :param chosen_degree: Degree of polynomial user fits to the dataset (draws vertical line)
@@ -157,9 +178,13 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor):
         raise PreventUpdate
     max_degree_to_check = 10
 
+    if session is None:
+        session = {'random-state': RANDOM_STATE}
+
     degrees = np.array(range(1, max_degree_to_check + 1))
     error_data = {'train': [], 'test': [], 'out-of-range': []}
-    generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
+    generator = DatasetGenerator(dataset, sample_size, noise_factor,
+                                 random_state=session.get('random-state', RANDOM_STATE))
 
     for i in range(NUM_RESAMPLES_TO_DO):
         x_values, y_values, x_values_out_range, y_out_range = \
@@ -294,10 +319,27 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor):
         xaxis_title='Polynomial Degree',
         yaxis_title='Mean Squared Error'
     )
+    jitter = 0.05
+    concept_degree = DatasetGenerator.dataset_name_to_degree[dataset]
+    max_y_val = max(max(mean_test_errors + std_test_errors),
+                    max(mean_train_errors + std_train_errors))
+
+    # noinspection PyTypeChecker
+    concept_vertical_line = go.Scatter(
+        x=(concept_degree, concept_degree),
+        y=(0, max_y_val),
+        name='Dataset Degree',
+        marker=dict(color='black'),
+        line_dash='dash',
+        legendgroup='Misc.'
+        )
+
     fig = go.Figure(data=[trace_train, trace_train_error, trace_test, trace_test_error,
-                          trace_test_out_of_range, trace_test_out_of_range_error], layout=layout)
-    fig.add_vline(x=chosen_degree, line_width=3, line_color='#27ab22',
-                  annotation=dict(text='Chosen Degree', textangle=-90,
+                          trace_test_out_of_range, trace_test_out_of_range_error,
+                          concept_vertical_line], layout=layout)
+
+    fig.add_vline(x=chosen_degree + jitter, line_width=3, line_color='#27ab22',
+                  annotation=dict(text='Model Degree', textangle=-90,
                                   font=dict(color='rgb(0, 0, 0)'),
                                   yshift=-50))
     return fig

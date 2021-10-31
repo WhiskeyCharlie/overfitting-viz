@@ -29,6 +29,8 @@ def add_layout_to_app(app) -> None:
     :return: None
     """
     app.layout = html.Div(children=[
+        # For storing information on the client-side
+        dcc.Store(id='session', storage_type='session'),
         # .container class is fixed, .container.scalable is scalable
         html.Div(className="banner", children=[
             html.Div(className='container scalable', children=[

@@ -18,7 +18,7 @@ class DatasetGenerator:
                  out_of_range_proportion=0.025, random_state=None):
         self.__name = name
         # Random number generator (rng) for all randomness
-        self.__rng = np.random.default_rng(random_state)
+        self.__rng = np.random.default_rng(random_state or None)
         # The below or ensures that if the frontend passes None as sample_size, we don't crash
         self.__sample_size = sample_size or self.min_sample_size
         # Right now, 0.5 is arbitrary so let's fix this in future
@@ -83,13 +83,14 @@ class DatasetGenerator:
 
         lst_features = np.sort(self.__rng.uniform(-2, 2, size=self.__sample_size)).reshape(-1, 1)
         samples_per_side = self.__n_out_of_range_samples // 2
-        lower_half = np.sort(self.__rng.uniform(-2.25, -2, size=samples_per_side))
-        upper_half = np.sort(self.__rng.uniform(2, 2.25, size=samples_per_side))
+        lower_half = np.sort(self.__rng.uniform(-2.125, -2, size=samples_per_side))
+        upper_half = np.sort(self.__rng.uniform(2, 2.125, size=samples_per_side))
         lst_features_out_of_range = np.concatenate((lower_half, upper_half)).reshape(-1, 1)
 
-        evaluations = DatasetGenerator.__eval_polynomial(polynomial, lst_features)
-        evaluations_out_of_range = DatasetGenerator.__eval_polynomial(polynomial,
-                                                                      lst_features_out_of_range)
+        evaluations, norm = DatasetGenerator.__eval_polynomial(polynomial, lst_features, normalize=True)
+        evaluations_out_of_range, _ = DatasetGenerator.__eval_polynomial(polynomial,
+                                                                         lst_features_out_of_range)
+        evaluations_out_of_range /= norm
 
         self.__lst_features = lst_features
         self.__evaluations = evaluations
@@ -106,15 +107,20 @@ class DatasetGenerator:
         :param number_of_functions: How many functions should we generate (In general don't modify)
         :return: list of numpy Polynomials ranging from degree 1 to number_of_functions (inclusive)
         """
-        return [np.polynomial.Polynomial(self.__rng.uniform(-1, 1, size=i+1)) for i in
-                range(0, number_of_functions)]
+        return [np.polynomial.Polynomial(
+            np.polynomial.polynomial.polyfromroots(self.__rng.uniform(-2, 2, size=i)))
+            for i in range(0, number_of_functions)]
 
     @staticmethod
-    def __eval_polynomial(polynomial: np.polynomial.Polynomial, values: np.array) -> np.array:
+    def __eval_polynomial(polynomial: np.polynomial.Polynomial, values: np.array, normalize=False) -> np.array:
         """
         Evaluate the given polynomial at all points in values given (vectorized)
         :param polynomial: Given polynomial
         :param values: Values at which to evaluate polynomial
         :return: Numpy array of Evaluations, cast to np.float64
         """
-        return polynomial(values).squeeze().astype(np.float64)
+        evaluations = polynomial(values).squeeze().astype(np.float64)
+        divide_by = 1
+        if normalize:
+            divide_by = np.max(np.abs(evaluations))
+        return (2 * evaluations / divide_by), divide_by
