@@ -1,0 +1,10 @@
+.git/
+.github/
+venv/
+**/__pycache__/
+**/.idea/
+
+Dockerfile
+.dockerignore
+.gitignore
+*.md
