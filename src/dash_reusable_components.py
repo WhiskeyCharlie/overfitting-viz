@@ -3,8 +3,8 @@ Some extra components for the layout of the app.
 """
 from typing import Dict
 
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
 import dash_bootstrap_components as dbc
 
 
@@ -49,7 +49,7 @@ def named_dropdown(name, **kwargs):
 
 def named_input_area(name, **kwargs):
     """
-    A normal input are but with a name above it
+    A normal input, but with a name above it
     :param name: The name of the input area
     :param kwargs: to be passed to the input area
     :return: HTML div containing the name and input area

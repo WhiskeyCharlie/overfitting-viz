@@ -10,9 +10,9 @@
 .banner {
     height: 100px;
     background-color: #2f3445; /* Machine Learning Color is orange */
-    padding-top: 0px;
-    padding-left: 0px;
-    padding-right: 0px;
+    padding-top: 0;
+    padding-left: 0;
+    padding-right: 0;
     width: 100%;
     margin-bottom: 10px;
 }

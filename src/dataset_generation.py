@@ -1,9 +1,25 @@
 """
 Home of anything pertaining to generating the dataset, including noise generation
 """
-from typing import Tuple, List
+from typing import Tuple, List, NamedTuple, Optional
 
 import numpy as np
+from sklearn.model_selection import train_test_split
+
+
+TESTING_DATA_PROPORTION = 0.2
+
+
+class HalfDataset(NamedTuple):
+    all_values: np.array
+    train: np.array
+    test: np.array
+    out_of_range: np.array
+
+
+class Dataset(NamedTuple):
+    x: HalfDataset
+    y: HalfDataset
 
 
 class DatasetGenerator:
@@ -64,14 +80,28 @@ class DatasetGenerator:
 
         return self
 
-    def get_dataset(self) -> Tuple[np.array, np.array, np.array, np.array]:
+    def get_dataset(self, randomness: Optional[int] = None) -> Dataset:
+        """
+        Much like get_dataset() but data is returned in a structured dictionary
+        : return: See get_dataset()
+        """
+        x_values, y_values, x_out_range, y_out_range = \
+            self.make_dataset().introduce_noise().__get_dataset()
+        x_train, x_test, y_train, y_test = \
+            train_test_split(x_values, y_values,
+                             test_size=int(x_values.shape[0] * TESTING_DATA_PROPORTION),
+                             random_state=randomness)
+        return Dataset(x=HalfDataset(all_values=x_values, train=x_train, test=x_test, out_of_range=x_out_range),
+                       y=HalfDataset(all_values=y_values, train=y_train, test=y_test, out_of_range=y_out_range))
+
+    def __get_dataset(self) -> Tuple[np.array, np.array, np.array, np.array]:
         """
         Get (a copy of) the dataset stored internally in this object.
         :return: X, y (possibly with noise), X_out_of_range, y_out_of_range (possibly with noise)
         """
         assert self.__has_data, 'make_dataset must be called before get_dataset'
         return np.copy(self.__lst_features), np.copy(self.__evaluations), \
-               np.copy(self.__lst_features_out_of_range), np.copy(self.__evaluations_out_of_range)
+            np.copy(self.__lst_features_out_of_range), np.copy(self.__evaluations_out_of_range)
 
     def __generate_regression_data(self, polynomial: np.polynomial.Polynomial) -> \
             Tuple[np.array, np.array, np.array, np.array]:

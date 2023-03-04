@@ -2,7 +2,6 @@
 The main driver of the app
 """
 import os
-import sys
 from pathlib import Path
 
 import dash
@@ -12,30 +11,22 @@ from dash.dependencies import Input, Output
 from dash.exceptions import PreventUpdate
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PolynomialFeatures
 
 from dataset_generation import DatasetGenerator
-from general_utils import format_yhat, get_y_limits, form_error_bars_from_x_y
-from layout import add_layout_to_app, EXTERNAL_CSS, APP_TITLE
+from general_utils import format_yhat, get_y_limits, form_error_bars_from_x_y, multiple_model_error_data
+from layout import add_layout_to_app, EXTERNAL_CSS, _APP_TITLE
 
 RANDOM_STATE = 718
-TESTING_DATA_PROPORTION = 0.2
-NUM_RESAMPLES_TO_DO = 10
-MIN_SAMPLE_SIZE = DatasetGenerator.min_sample_size
 
-# Check if the code is running "inside" an executable file
-if getattr(sys, 'frozen', False):
-    ASSETS_FOLDER = Path(getattr(sys, '_MEIPASS', '.')) / 'assets'
-else:
-    ASSETS_FOLDER = str(Path(__file__).absolute().parent.parent / 'assets')
+ASSETS_FOLDER = str(Path(__file__).absolute().parent.parent / 'assets')
 
 # This helps work in various environments
 IP_TO_LISTEN_ON = os.getenv('IP_TO_LISTEN_ON', '127.0.0.1')
 PORT = 2522
 
 app = dash.Dash(__name__, external_stylesheets=EXTERNAL_CSS, assets_folder=ASSETS_FOLDER,
-                title=APP_TITLE)
+                title=_APP_TITLE)
 server = app.server
 add_layout_to_app(app)
 
@@ -56,58 +47,56 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
     :param n_clicks: How many times has the resample button been pressed
     :return: The figure, essentially the main graph to display
     """
-    if None in [sample_size, noise_factor] or sample_size < MIN_SAMPLE_SIZE:
+    if None in [sample_size, noise_factor] or sample_size < DatasetGenerator.min_sample_size:
         raise PreventUpdate
     generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
-    x_values, y_values, x_values_out_of_range, y_values_out_range = \
-        generator.make_dataset().introduce_noise().get_dataset()
-    x_train, x_test, y_train, y_test = \
-        train_test_split(x_values, y_values,
-                         test_size=int(x_values.shape[0] * TESTING_DATA_PROPORTION),
-                         random_state=n_clicks or RANDOM_STATE)
+    dataset_tuple = generator.make_dataset().introduce_noise().get_dataset(randomness=n_clicks or RANDOM_STATE)
 
-    x_range = np.linspace(min(x_values.min(),
-                              x_values_out_of_range.min()) - 0.5,
-                          max(x_values.max(), x_values_out_of_range.max()) + 0.5,
+    x_range = np.linspace(min(dataset_tuple.x.all_values.min(),
+                              dataset_tuple.x.out_of_range.min()) - 0.5,
+                          max(dataset_tuple.x.all_values.max(), dataset_tuple.x.out_of_range.max()) + 0.5,
                           sample_size).reshape(-1, 1)
 
     # Create Polynomial Features so that linear regression is actually polynomial regression
     poly = PolynomialFeatures(degree=degree, include_bias=False)
-    x_train_poly = poly.fit_transform(x_train)
-    x_test_poly = poly.transform(x_test)
+    x_train_poly = poly.fit_transform(dataset_tuple.x.train)
+    x_test_poly = poly.transform(dataset_tuple.x.test)
     poly_range = poly.fit_transform(x_range)
 
     model = LinearRegression()
 
     # Train model and predict
-    model.fit(x_train_poly, y_train)
+    model.fit(x_train_poly, dataset_tuple.y.train)
     y_pred_range = model.predict(poly_range)
-    train_error = mean_squared_error(y_train, model.predict(x_train_poly))
-    test_error = mean_squared_error(y_test, model.predict(x_test_poly))
+    train_error = mean_squared_error(dataset_tuple.y.train, model.predict(x_train_poly))
+    test_error = mean_squared_error(dataset_tuple.y.test, model.predict(x_test_poly))
 
     # Create figure
     trace_train_in_range = go.Scatter(
-        x=x_train.squeeze(),
-        y=y_train,
+        x=dataset_tuple.x.train.squeeze(),
+        y=dataset_tuple.y.train,
         name='Training Data',
         mode='markers',
+        hovertemplate='(%{x:.2f}, %{y:.2f})',
         opacity=0.7,
         marker=dict(size=12)
     )
     trace_test_in_range = go.Scatter(
-        x=x_test.squeeze(),
-        y=y_test,
+        x=dataset_tuple.x.test.squeeze(),
+        y=dataset_tuple.y.test,
         name='Test Data',
         mode='markers',
+        hovertemplate='(%{x:.2f}, %{y:.2f})',
         opacity=0.7,
         marker=dict(size=12)
     )
 
     trace_test_out_range = go.Scatter(
-        x=x_values_out_of_range.squeeze(),
-        y=y_values_out_range,
+        x=dataset_tuple.x.out_of_range.squeeze(),
+        y=dataset_tuple.y.out_of_range,
         name='Out Of Range Test Data',
         mode='markers',
+        hovertemplate='(%{x:.2f}, %{y:.2f})',
         opacity=0.7,
         marker=dict(size=12, color='yellow')
     )
@@ -117,7 +106,7 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
         y=y_pred_range,
         name='Prediction',
         mode='lines',
-        hovertext=format_yhat(model),
+        hovertemplate='(%{x:.2f}, %{y:.2f})<br>'+format_yhat(model),
         marker=dict(color='#27ab22'),
         line=dict(width=4)
     )
@@ -136,7 +125,7 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
     )
 
     return go.Figure(data=data, layout=layout,
-                     layout_yaxis_range=get_y_limits(y_values, y_values_out_range))
+                     layout_yaxis_range=get_y_limits(dataset_tuple.y.all_values, dataset_tuple.y.out_of_range))
 
 
 @app.callback(Output('graph-fitting-display', 'figure'),
@@ -146,51 +135,21 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks=0):
                Input('slider-dataset-noise', 'value')])
 def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor):
     """
-    Function called any time the graph needs to be updated. We redraws the graph from scratch
+    Function called any time the graph needs to be updated. We redraw the graph from scratch
     :param dataset: Name of the dataset to generate
     :param sample_size: How many points to generate
     :param chosen_degree: Degree of polynomial user fits to the dataset (draws vertical line)
     :param noise_factor: How much noise to add to data (deviation from the true function)
     :return: The figure, essentially the main graph to display
     """
-    if None in [sample_size, noise_factor] or sample_size < MIN_SAMPLE_SIZE:
+    if None in [sample_size, noise_factor] or sample_size < DatasetGenerator.min_sample_size:
         raise PreventUpdate
     max_degree_to_check = 10
 
     degrees = np.array(range(1, max_degree_to_check + 1))
-    error_data = {'train': [], 'test': [], 'out-of-range': []}
-    generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
+    data_generator = DatasetGenerator(dataset, sample_size, noise_factor, random_state=RANDOM_STATE)
 
-    for i in range(NUM_RESAMPLES_TO_DO):
-        x_values, y_values, x_values_out_range, y_out_range = \
-            generator.make_dataset().introduce_noise().get_dataset()
-        x_train, x_test, y_train, y_test = \
-            train_test_split(x_values, y_values,
-                             test_size=int(x_values.shape[0] * TESTING_DATA_PROPORTION),
-                             random_state=i + 1)
-        train_errors = []
-        test_errors = []
-        out_of_range_test_errors = []
-        for deg in degrees:
-            poly = PolynomialFeatures(degree=deg, include_bias=False)
-            x_train_poly = poly.fit_transform(x_train)
-            x_test_poly = poly.transform(x_test)
-            x_test_out_of_range_poly = poly.transform(x_values_out_range)
-
-            model = LinearRegression()
-
-            # Train model and predict
-            model.fit(x_train_poly, y_train)
-            train_error = mean_squared_error(y_train, model.predict(x_train_poly))
-            test_error = mean_squared_error(y_test, model.predict(x_test_poly))
-            out_of_range_test_error = \
-                mean_squared_error(y_out_range, model.predict(x_test_out_of_range_poly))
-            train_errors.append(train_error)
-            test_errors.append(test_error)
-            out_of_range_test_errors.append(out_of_range_test_error)
-        error_data['train'].append(train_errors)
-        error_data['test'].append(test_errors)
-        error_data['out-of-range'].append(out_of_range_test_errors)
+    error_data = multiple_model_error_data(degrees, data_generator)
 
     mean_train_errors = np.mean(error_data['train'], axis=0)
     mean_test_errors = np.mean(error_data['test'], axis=0)
@@ -305,6 +264,4 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor):
 
 # Running the server
 if __name__ == '__main__':
-    # NOTE: do not set debug=True in the below function call if you intend to compile it!
-    # The executable will crash!
     app.run_server(host=IP_TO_LISTEN_ON, port=PORT, dev_tools_silence_routes_logging=True)
