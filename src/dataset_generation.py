@@ -1,9 +1,26 @@
 """
 Home of anything pertaining to generating the dataset, including noise generation
 """
-from typing import Tuple, List
+from typing import Tuple, NamedTuple, Optional
 
 import numpy as np
+import numpy.polynomial.polynomial as poly
+from sklearn.model_selection import train_test_split
+
+
+TESTING_DATA_PROPORTION = 0.2
+
+
+class HalfDataset(NamedTuple):
+    all_values: np.array
+    train: np.array
+    test: np.array
+    out_of_range: np.array
+
+
+class Dataset(NamedTuple):
+    x: HalfDataset
+    y: HalfDataset
 
 
 class DatasetGenerator:
@@ -27,7 +44,7 @@ class DatasetGenerator:
         # Max with 2 to ensure at least 1 out-of-range point on either side of the function
         self.__n_out_of_range_samples = max(2, round(self.__out_of_range_proportion *
                                                      self.__sample_size))
-        self.__regression_functions = self.__generate_list_of_regression_functions()
+        # self.__regression_functions = self.__generate_list_of_regression_functions()
         self.__lst_features: np.array = None
         self.__lst_features_out_of_range: np.array = None
         self.__evaluations: np.array = None
@@ -41,7 +58,7 @@ class DatasetGenerator:
         """
 
         ds_degree = DatasetGenerator.dataset_name_to_degree[self.__name]
-        regression_func = self.__regression_functions[ds_degree]
+        regression_func = self.__generate_regression_function(ds_degree)
         self.__generate_regression_data(regression_func)
         return self
 
@@ -64,14 +81,28 @@ class DatasetGenerator:
 
         return self
 
-    def get_dataset(self) -> Tuple[np.array, np.array, np.array, np.array]:
+    def get_dataset(self, train_test_split_randomness: Optional[int] = None) -> Dataset:
+        """
+        Much like get_dataset() but data is returned in a structured dictionary
+        : return: See get_dataset()
+        """
+        x_values, y_values, x_out_range, y_out_range = \
+            self.make_dataset().introduce_noise().__get_dataset()
+        x_train, x_test, y_train, y_test = \
+            train_test_split(x_values, y_values,
+                             test_size=int(x_values.shape[0] * TESTING_DATA_PROPORTION),
+                             random_state=train_test_split_randomness)
+        return Dataset(x=HalfDataset(all_values=x_values, train=x_train, test=x_test, out_of_range=x_out_range),
+                       y=HalfDataset(all_values=y_values, train=y_train, test=y_test, out_of_range=y_out_range))
+
+    def __get_dataset(self) -> Tuple[np.array, np.array, np.array, np.array]:
         """
         Get (a copy of) the dataset stored internally in this object.
         :return: X, y (possibly with noise), X_out_of_range, y_out_of_range (possibly with noise)
         """
         assert self.__has_data, 'make_dataset must be called before get_dataset'
         return np.copy(self.__lst_features), np.copy(self.__evaluations), \
-               np.copy(self.__lst_features_out_of_range), np.copy(self.__evaluations_out_of_range)
+            np.copy(self.__lst_features_out_of_range), np.copy(self.__evaluations_out_of_range)
 
     def __generate_regression_data(self, polynomial: np.polynomial.Polynomial) -> \
             Tuple[np.array, np.array, np.array, np.array]:
@@ -100,16 +131,9 @@ class DatasetGenerator:
 
         return lst_features, evaluations, lst_features_out_of_range, evaluations_out_of_range
 
-    def __generate_list_of_regression_functions(self, number_of_functions=11) -> \
-            List[np.polynomial.Polynomial]:
-        """
-        Make a list of random polynomial functions against which data will be generated.
-        :param number_of_functions: How many functions should we generate (In general don't modify)
-        :return: list of numpy Polynomials ranging from degree 1 to number_of_functions (inclusive)
-        """
-        return [np.polynomial.Polynomial(
-            np.polynomial.polynomial.polyfromroots(self.__rng.uniform(-2, 2, size=i)))
-            for i in range(0, number_of_functions)]
+    def __generate_regression_function(self, degree) -> np.polynomial.Polynomial:
+        sign = self.__rng.choice([-1, 1])  # This sign will constrain the polynomial (randomly choose 1 of 2 options)
+        return poly.Polynomial(poly.polyfromroots(self.__rng.uniform(-2, 2, size=degree))) * sign
 
     @staticmethod
     def __eval_polynomial(polynomial: np.polynomial.Polynomial, values: np.array, normalize=False) -> np.array:

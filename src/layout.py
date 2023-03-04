@@ -1,9 +1,10 @@
 """
 Everything needed to add the layout (structure) to the app
 """
+import os
 import dash_bootstrap_components as dbc
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
 
 import dash_reusable_components as drc
 import tooltip_data as ttd
@@ -16,9 +17,13 @@ EXTERNAL_CSS = [
     "https://cdn.rawgit.com/xhlulu/9a6e89f418ee40d02b637a429a876aa9/raw/base-styles.css",
     dbc.themes.BOOTSTRAP
 ]
-MIN_NUM_POINTS_SLIDER, DEFAULT_NUM_POINTS_SLIDER, MAX_NUM_POINTS_SLIDER = 10, 30, 300
-APP_TITLE = 'Vizibly'
-GITHUB_URL = 'https://github.com/WhiskeyCharlie/overfitting-viz'
+
+_MIN_NUM_POINTS_SLIDER = os.environ.get('MIN_NUM_POINTS_SLIDER', default=10)
+_DEFAULT_NUM_POINTS_SLIDER = os.environ.get('DEFAULT_NUM_POINTS_SLIDER', default=30)
+_MAX_NUM_POINTS_SLIDER = os.environ.get('MAX_NUM_POINTS_SLIDER', default=300)
+
+_APP_TITLE = 'Vizibly'
+_GITHUB_URL = 'https://github.com/WhiskeyCharlie/overfitting-viz'
 
 
 def add_layout_to_app(app) -> None:
@@ -35,7 +40,7 @@ def add_layout_to_app(app) -> None:
         html.Div(className="banner", children=[
             html.Div(className='container scalable', children=[
                 html.H2(html.A(
-                    APP_TITLE,
+                    _APP_TITLE,
                     style={'text-decoration': 'none', 'color': 'inherit'}
                 ))
             ]),
@@ -56,19 +61,7 @@ def add_layout_to_app(app) -> None:
                     drc.named_dropdown(
                         name='Dataset',
                         id='dropdown-dataset',
-                        options=[
-                            {'label': 'Dataset Degree 0', 'value': 'degree_0'},
-                            {'label': 'Dataset Degree 1', 'value': 'degree_1'},
-                            {'label': 'Dataset Degree 2', 'value': 'degree_2'},
-                            {'label': 'Dataset Degree 3', 'value': 'degree_3'},
-                            {'label': 'Dataset Degree 4', 'value': 'degree_4'},
-                            {'label': 'Dataset Degree 5', 'value': 'degree_5'},
-                            {'label': 'Dataset Degree 6', 'value': 'degree_6'},
-                            {'label': 'Dataset Degree 7', 'value': 'degree_7'},
-                            {'label': 'Dataset Degree 8', 'value': 'degree_8'},
-                            {'label': 'Dataset Degree 9', 'value': 'degree_9'},
-                            {'label': 'Dataset Degree 10', 'value': 'degree_10'},
-                        ],
+                        options=[dict(label=f'Dataset Degree {i}', value=f'degree_{i}') for i in range(11)],
                         value='degree_1',
                         clearable=False,
                         searchable=False,
@@ -90,9 +83,9 @@ def add_layout_to_app(app) -> None:
                     html.Br(),
                     drc.named_input_area(
                         name="Dataset Sample Size",
-                        min=MIN_NUM_POINTS_SLIDER,
-                        value=DEFAULT_NUM_POINTS_SLIDER,
-                        max=MAX_NUM_POINTS_SLIDER,
+                        min=_MIN_NUM_POINTS_SLIDER,
+                        value=_DEFAULT_NUM_POINTS_SLIDER,
+                        max=_MAX_NUM_POINTS_SLIDER,
                         id="slider-sample-size",
                         type='number',
                         style={'width': '100%'}
@@ -105,7 +98,7 @@ def add_layout_to_app(app) -> None:
                         value=1,
                         step=1,
                         id="slider-polynomial-degree",
-                        marks={str(i): str(i) for i in range(1, 11)}
+                        marks={mark: mark for mark in map(str, range(1, 11))}
                     ),
                     html.Br(),
                     html.Br(),
@@ -182,7 +175,7 @@ def add_layout_to_app(app) -> None:
                             ),
                             html.A(
                                 children='Get the code',
-                                href=GITHUB_URL
+                                href=_GITHUB_URL
                             )
                         ]
                     )

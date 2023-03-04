@@ -1,11 +1,10 @@
 *.zip
 venv/
 .idea/
-build/
-dist/
+**/__pycache__/
+
 
 # Default ignored files
 /.idea/workspace.xml
 /.idea/
 __pycache__
-/assets/aperture.png
