@@ -64,7 +64,7 @@ def form_error_bars_from_x_y(x_array: np.array, y_array: np.array, std_array: np
 def multiple_model_error_data(degrees: np.array, generator: DatasetGenerator) -> dict[str, list]:
     error_data = {'train': [], 'test': [], 'out-of-range': []}
     for i in range(NUM_RESAMPLES_TO_DO):
-        dataset = generator.get_dataset(randomness=i+1)
+        dataset = generator.get_dataset(train_test_split_randomness=i + 1)
         train_errors = []
         test_errors = []
         out_of_range_test_errors = []

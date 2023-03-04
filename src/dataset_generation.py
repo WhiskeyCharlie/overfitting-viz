@@ -1,9 +1,10 @@
 """
 Home of anything pertaining to generating the dataset, including noise generation
 """
-from typing import Tuple, List, NamedTuple, Optional
+from typing import Tuple, NamedTuple, Optional
 
 import numpy as np
+import numpy.polynomial.polynomial as poly
 from sklearn.model_selection import train_test_split
 
 
@@ -34,7 +35,7 @@ class DatasetGenerator:
                  out_of_range_proportion=0.025, random_state=None):
         self.__name = name
         # Random number generator (rng) for all randomness
-        self.__rng = np.random.default_rng(random_state)
+        self.__rng = np.random.default_rng(random_state or None)
         # The below or ensures that if the frontend passes None as sample_size, we don't crash
         self.__sample_size = sample_size or self.min_sample_size
         # Right now, 0.5 is arbitrary so let's fix this in future
@@ -43,7 +44,7 @@ class DatasetGenerator:
         # Max with 2 to ensure at least 1 out-of-range point on either side of the function
         self.__n_out_of_range_samples = max(2, round(self.__out_of_range_proportion *
                                                      self.__sample_size))
-        self.__regression_functions = self.__generate_list_of_regression_functions()
+        # self.__regression_functions = self.__generate_list_of_regression_functions()
         self.__lst_features: np.array = None
         self.__lst_features_out_of_range: np.array = None
         self.__evaluations: np.array = None
@@ -57,7 +58,7 @@ class DatasetGenerator:
         """
 
         ds_degree = DatasetGenerator.dataset_name_to_degree[self.__name]
-        regression_func = self.__regression_functions[ds_degree]
+        regression_func = self.__generate_regression_function(ds_degree)
         self.__generate_regression_data(regression_func)
         return self
 
@@ -80,7 +81,7 @@ class DatasetGenerator:
 
         return self
 
-    def get_dataset(self, randomness: Optional[int] = None) -> Dataset:
+    def get_dataset(self, train_test_split_randomness: Optional[int] = None) -> Dataset:
         """
         Much like get_dataset() but data is returned in a structured dictionary
         : return: See get_dataset()
@@ -90,7 +91,7 @@ class DatasetGenerator:
         x_train, x_test, y_train, y_test = \
             train_test_split(x_values, y_values,
                              test_size=int(x_values.shape[0] * TESTING_DATA_PROPORTION),
-                             random_state=randomness)
+                             random_state=train_test_split_randomness)
         return Dataset(x=HalfDataset(all_values=x_values, train=x_train, test=x_test, out_of_range=x_out_range),
                        y=HalfDataset(all_values=y_values, train=y_train, test=y_test, out_of_range=y_out_range))
 
@@ -113,13 +114,14 @@ class DatasetGenerator:
 
         lst_features = np.sort(self.__rng.uniform(-2, 2, size=self.__sample_size)).reshape(-1, 1)
         samples_per_side = self.__n_out_of_range_samples // 2
-        lower_half = np.sort(self.__rng.uniform(-2.25, -2, size=samples_per_side))
-        upper_half = np.sort(self.__rng.uniform(2, 2.25, size=samples_per_side))
+        lower_half = np.sort(self.__rng.uniform(-2.125, -2, size=samples_per_side))
+        upper_half = np.sort(self.__rng.uniform(2, 2.125, size=samples_per_side))
         lst_features_out_of_range = np.concatenate((lower_half, upper_half)).reshape(-1, 1)
 
-        evaluations = DatasetGenerator.__eval_polynomial(polynomial, lst_features)
-        evaluations_out_of_range = DatasetGenerator.__eval_polynomial(polynomial,
-                                                                      lst_features_out_of_range)
+        evaluations, norm = DatasetGenerator.__eval_polynomial(polynomial, lst_features, normalize=True)
+        evaluations_out_of_range, _ = DatasetGenerator.__eval_polynomial(polynomial,
+                                                                         lst_features_out_of_range)
+        evaluations_out_of_range /= norm
 
         self.__lst_features = lst_features
         self.__evaluations = evaluations
@@ -129,22 +131,20 @@ class DatasetGenerator:
 
         return lst_features, evaluations, lst_features_out_of_range, evaluations_out_of_range
 
-    def __generate_list_of_regression_functions(self, number_of_functions=11) -> \
-            List[np.polynomial.Polynomial]:
-        """
-        Make a list of random polynomial functions against which data will be generated.
-        :param number_of_functions: How many functions should we generate (In general don't modify)
-        :return: list of numpy Polynomials ranging from degree 1 to number_of_functions (inclusive)
-        """
-        return [np.polynomial.Polynomial(self.__rng.uniform(-1, 1, size=i+1)) for i in
-                range(0, number_of_functions)]
+    def __generate_regression_function(self, degree) -> np.polynomial.Polynomial:
+        sign = self.__rng.choice([-1, 1])  # This sign will constrain the polynomial (randomly choose 1 of 2 options)
+        return poly.Polynomial(poly.polyfromroots(self.__rng.uniform(-2, 2, size=degree))) * sign
 
     @staticmethod
-    def __eval_polynomial(polynomial: np.polynomial.Polynomial, values: np.array) -> np.array:
+    def __eval_polynomial(polynomial: np.polynomial.Polynomial, values: np.array, normalize=False) -> np.array:
         """
         Evaluate the given polynomial at all points in values given (vectorized)
         :param polynomial: Given polynomial
         :param values: Values at which to evaluate polynomial
         :return: Numpy array of Evaluations, cast to np.float64
         """
-        return polynomial(values).squeeze().astype(np.float64)
+        evaluations = polynomial(values).squeeze().astype(np.float64)
+        divide_by = 1
+        if normalize:
+            divide_by = np.max(np.abs(evaluations))
+        return (2 * evaluations / divide_by), divide_by
