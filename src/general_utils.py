@@ -1,8 +1,7 @@
 """
-Useful functions that don't belong anywhere else
+Useful functions that don't specifically belong anywhere else
 """
 import os
-from typing import Tuple
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -15,22 +14,25 @@ from dataset_generation import DatasetGenerator
 NUM_RESAMPLES_TO_DO = os.getenv('NUM_RESAMPLES_TO_DO', default=10)
 
 
-def get_y_limits(y_arr: np.array, y_arr_out_or_range: np.array) -> Tuple[float, float]:
+def get_y_limits(y_arr: np.array, y_arr_out_of_range: np.array) -> tuple[float, float]:
     """
-    Finds the edges of a "window" around data such that there is a 5% empty region around the data
+    Finds a "window" around data such that there is a 5% empty region around the datapoints
     :param y_arr: y_values in the data
-    :param y_arr_out_or_range: out of range y_values in the data
+    :param y_arr_out_of_range: out of range y_values in the data
     :return: Appropriate y_limits to show all datapoint
     """
-    lowest_val = np.minimum(np.amin(y_arr, initial=np.inf), np.amin(y_arr_out_or_range, initial=np.inf))
-    highest_val = np.maximum(np.amax(y_arr, initial=-np.inf), np.amax(y_arr_out_or_range, initial=-np.inf))
-    delta = highest_val - lowest_val
+    five_percent = 0.05
 
-    distance_to_stretch = delta * 0.05
+    lowest_val = np.minimum(np.amin(y_arr, initial=np.inf), np.amin(y_arr_out_of_range, initial=np.inf))
+    highest_val = np.maximum(np.amax(y_arr, initial=-np.inf), np.amax(y_arr_out_of_range, initial=-np.inf))
+    window_size = highest_val - lowest_val
+
+    distance_to_stretch = window_size * five_percent
+
     return lowest_val - distance_to_stretch, highest_val + distance_to_stretch
 
 
-def format_yhat(model):
+def format_yhat(model: LinearRegression) -> str:
     """
     Make a textual representation of the passed model
     :param model: sklearn LinearRegression object
@@ -39,15 +41,17 @@ def format_yhat(model):
     coefficients = model.coef_
     intercept = model.intercept_
     formula_components = []
-    variable_powers = dict([(1, 'x')] + [(i, f'x^{i}') for i in range(2, len(coefficients) + 1)])
+    power_to_variable_strings = dict([(1, 'x')] + [(i, f'x^{i}') for i in range(2, len(coefficients) + 1)])
+
     for order, coefficient in enumerate(coefficients, start=1):
         sign = '-' if coefficient < 0 else '+'
-        formula_components.append(f'{sign} {abs(coefficient):.2f}*{variable_powers[order]}')
-    return f'y = {intercept:.2f} ' + ' '.join(formula_components)
+        formula_components.append(f'{sign} {abs(coefficient):.2f}*{power_to_variable_strings[order]}')
+
+    return f'y = {intercept:.2f} {" ".join(formula_components)}'
 
 
 def form_error_bars_from_x_y(x_array: np.array, y_array: np.array, std_array: np.array) -> \
-        Tuple[np.array, np.array]:
+        tuple[np.array, np.array]:
     """
     Creates the x and y values for the continuous error bars around lines.
     Lines will not go below zero.
@@ -62,24 +66,35 @@ def form_error_bars_from_x_y(x_array: np.array, y_array: np.array, std_array: np
 
 
 def multiple_model_error_data(degrees: np.array, generator: DatasetGenerator) -> dict[str, list]:
+    """
+    TODO: write
+    """
     error_data = {'train': [], 'test': [], 'out-of-range': []}
+
     for i in range(NUM_RESAMPLES_TO_DO):
         dataset = generator.get_dataset(train_test_split_randomness=i + 1)
         train_errors = []
         test_errors = []
         out_of_range_test_errors = []
+
         for deg in degrees:
             out_of_range_test_error, test_error, train_error = train_model(dataset, deg)
             train_errors.append(train_error)
             test_errors.append(test_error)
             out_of_range_test_errors.append(out_of_range_test_error)
+
         error_data['train'].append(train_errors)
         error_data['test'].append(test_errors)
         error_data['out-of-range'].append(out_of_range_test_errors)
+
     return error_data
 
 
-def train_model(dataset, deg):
+def train_model(dataset, deg) -> tuple[float, float, float]:
+    """
+    Fit a polynomial of degree `deg` to data `dataset`.
+    Compute the testing error (for both in-range data and out-of-range-data) and training error
+    """
     poly = PolynomialFeatures(degree=deg, include_bias=False)
     x_train_poly = poly.fit_transform(dataset.x.train)
     x_test_poly = poly.transform(dataset.x.test)

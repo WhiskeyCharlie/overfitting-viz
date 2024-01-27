@@ -21,7 +21,7 @@ RANDOM_STATE = 718
 
 ASSETS_FOLDER = str(Path(__file__).absolute().parent.parent / 'assets')
 
-# This helps work in various environments
+# Making this configurable lets the same code work on multiple environments
 IP_TO_LISTEN_ON = os.getenv('IP_TO_LISTEN_ON', '127.0.0.1')
 PORT = 2522
 
@@ -127,6 +127,7 @@ def update_graph(dataset, sample_size, degree, noise_factor, n_clicks, session):
     rounded_test_error = round(test_error, 3)
 
     if min(rounded_test_error, rounded_train_error) < 0.0001:
+        # Tiny numbers look better in scientific notation
         rounded_test_error = f'{test_error:.2e}'
         rounded_train_error = f'{train_error:.2e}'
     inequality_symbol = '>' if train_error > test_error else '<'
@@ -300,6 +301,7 @@ def update_fitting_graph(dataset, sample_size, chosen_degree, noise_factor, sess
                   annotation=dict(text='Model Degree', textangle=-90,
                                   font=dict(color='rgb(0, 0, 0)'),
                                   yshift=-50))
+    # fig.update_layout(yaxis=dict(type='log'))
     return fig
 
 

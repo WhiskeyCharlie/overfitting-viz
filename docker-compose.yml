@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  nginxproxy:
+    image: viziblyproxy
+    build:
+      context: nginx
+    ports:
+      - "8080:80"
+      - "8443:443"
+    networks:
+      - nginxproxy
+      - vizibly
+    volumes:
+      - ./secrets/cert_key:/etc/ssl/cert_key/:ro
+  vizibly:
+    image: vizibly
+    build:
+      context: .
+    networks:
+      - vizibly
+
+networks:
+  nginxproxy:
+  vizibly:

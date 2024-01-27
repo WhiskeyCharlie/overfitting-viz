@@ -1,14 +1,13 @@
 """
 Some extra components for the layout of the app.
 """
-from typing import Dict
 
 from dash import dcc
 from dash import html
 import dash_bootstrap_components as dbc
 
 
-def _omit(omitted_keys, dictionary: Dict):
+def _omit(omitted_keys, dictionary: dict):
     """
     Return a copy of dictionary with the keys in omitted_keys dropped
     :param omitted_keys: Iterable of keys

@@ -1,3 +1,5 @@
+[//]: # (TODO: I don't like the wording of lots of this file, some info is also missing or out of date)
+
 # ML-Overfitting-Plotly
 
 An interactive application that demonstrates overfitting in machine learning models

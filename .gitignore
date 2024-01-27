@@ -2,7 +2,7 @@
 venv/
 .idea/
 **/__pycache__/
-
+secrets/
 
 # Default ignored files
 /.idea/workspace.xml
