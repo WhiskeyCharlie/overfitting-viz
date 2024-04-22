@@ -3,6 +3,7 @@ version: '3.8'
 services:
   nginxproxy:
     image: viziblyproxy
+    restart: unless-stopped
     build:
       context: nginx
     ports:
@@ -14,7 +15,8 @@ services:
     volumes:
       - ./secrets/cert_key:/etc/ssl/cert_key/:ro
   vizibly:
-    image: vizibly
+    image: ghcr.io/whiskeycharlie/overfitting-viz:master
+    restart: unless-stopped
     build:
       context: .
     networks:
