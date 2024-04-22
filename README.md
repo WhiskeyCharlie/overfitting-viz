@@ -1,5 +1,3 @@
-[//]: # (TODO: I don't like the wording of lots of this file, some info is also missing or out of date)
-
 # ML-Overfitting-Plotly
 
 An interactive application that demonstrates overfitting in machine learning models
@@ -8,7 +6,7 @@ An interactive application that demonstrates overfitting in machine learning mod
 
 ### Using the app
 
-The **Dataset** dropdown lets you select among different datasets. Each dataset is identified by its degree; Degree 1 is a line, Degree 2 a parabola, etc.
+The **Dataset** dropdown lets you select the "true distribution" of the data to which we'll fit a polynomial. Each dataset is identified by its degree; Degree 1 is a line, Degree 2 a parabola, etc.
 
 **Noise Factor** lets you add noise to the sampled data. The value is proportional to the standard deviation of the (Gaussian) noise introduced to the data.
 
@@ -34,14 +32,11 @@ While this guide should get you up and running, it is important to understand th
 
 1. Create a new virtual environment. This is an isolated environment to store all the dependencies, so as not to pollute your system with our specific dependencies. We assume you are running this command in the terminal, but graphical options exist within certain IDEs such as PyCharm.
 
-   Run: `virtualenv overfitting_venv` from the directory containing the downloaded files. (If you get an error to the effect of "virtualenv" not being found, you probably need to install it. Find a recent guide on installation for your operating system of choice) This command creates the isolated environment that we will install our dependencies in.
+   Run: `python3 -m venv overfitting_venv` from the directory containing the downloaded files. (If you get an error to the effect of "virtualenv" not being found, you probably need to install it. Find a recent guide on installation for your operating system of choice) This command creates the isolated environment that we will install our dependencies in.
 
-2. Activate the environment to begin using it. This step is platform specific. On Linux systems, the command should
-   resemble
-   `source overfitting_venv/bin/activate`. We recommend finding an up-to-date guide for your Operating System (Windows, Mac, etc.).
+2. Activate the environment to begin using it. This step is platform specific. On Linux systems, the command should resemble `source overfitting_venv/bin/activate`. We recommend finding an up-to-date guide for your Operating System (Windows, Mac, etc.).
 
-3. Install the requirements (Only required the first time you create the environment) with the
-   command `pip install -r requirements.txt`
+3. Install the requirements (Only required the first time you create the environment) with the command `pip install -r requirements.txt`
 
    This may take a while, as it downloads and installs numerous Python libraries.
 
